@@ -41,12 +41,9 @@ module "node_pools" {
 }
 
 module "kubeconfig" {
-  source                     = "git@github.com:dev-null-loop/oci_containerengine//kubeconfig"
-  for_each                   = var.clusters
-  cluster_id                 = module.clusters[each.key].id
-  cluster_name               = each.key
-  kubeconfig_path            = "generated"
-  instance_principal_enabled = true
+  source     = "git@github.com:dev-null-loop/oci_containerengine//kubeconfig"
+  for_each   = var.clusters
+  cluster_id = module.clusters[each.key].id
 }
 
 # module "addons" {

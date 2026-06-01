@@ -29,12 +29,13 @@ module "sg" {
   for_each       = var.service_gateways
   display_name   = each.value.display_name
   compartment_id = module.vcns[each.value.vcn_name].compartment_id
+  service_id     = local.services[try(each.value.service_name, "services")].id
   vcn_id         = module.vcns[each.value.vcn_name].id
 }
 
 module "sl" {
   source         = "git@github.com:dev-null-loop/oci_core//security_list"
-  for_each       = local.security_lists_resolved
+  for_each       = local.security_lists
   display_name   = each.value.display_name
   compartment_id = module.vcns[each.value.vcn_name].compartment_id
   vcn_id         = module.vcns[each.value.vcn_name].id
@@ -44,7 +45,7 @@ module "sl" {
 
 module "rt" {
   source         = "git@github.com:dev-null-loop/oci_core//route_table"
-  for_each       = local.route_tables_resolved
+  for_each       = local.route_tables
   display_name   = each.value.display_name
   compartment_id = module.vcns[each.value.vcn_name].compartment_id
   vcn_id         = module.vcns[each.value.vcn_name].id
@@ -70,7 +71,6 @@ module "vm" {
   for_each                   = var.instances
   availability_domain        = each.value.availability_domain
   compartment_id             = var.compartment_ids[each.value.compartment_name]
-  tenancy_ocid               = var.tenancy_ocid
   agent_config               = each.value.agent_config
   enable_vnic_lookup_outputs = false
   create_vnic_details = {
@@ -80,7 +80,6 @@ module "vm" {
     freeform_tags          = each.value.create_vnic_details.freeform_tags
     hostname_label         = each.value.create_vnic_details.hostname_label
     private_ip             = each.value.create_vnic_details.private_ip
-    security_attributes    = each.value.create_vnic_details.security_attributes
     skip_source_dest_check = each.value.create_vnic_details.skip_source_dest_check
     subnet_id              = module.sn[each.value.create_vnic_details.subnet_name].id
   }
@@ -95,10 +94,7 @@ module "vm" {
     for v in each.value.cloud_init : {
       content_type = v.content_type
       filename     = v.filename
-      content = coalesce(
-	try(v.content, null),
-	module.kubeconfig[each.value.managed_cluster].kubeconfig_instance_principal
-      )
+      content      = try(v.content, null)
       vars = merge(
 	try(v.vars, {}),
 	{
