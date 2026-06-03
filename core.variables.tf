@@ -21,14 +21,8 @@ variable "instances" {
       vars         = optional(map(string))
     })), [])
     fault_domain = optional(number)
-    agent_config = optional(object({
-      are_all_plugins_disabled = optional(bool)
-      is_management_disabled   = optional(bool)
-      is_monitoring_disabled   = optional(bool)
-      plugins_config           = optional(list(string))
-    }))
-    nsg_ids    = optional(list(string))
-    private_ip = optional(string)
+    nsg_ids      = optional(list(string))
+    private_ip   = optional(string)
     create_vnic_details = optional(object({
       assign_ipv6ip             = optional(bool)
       assign_public_ip          = optional(bool)

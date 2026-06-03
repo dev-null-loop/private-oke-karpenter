@@ -72,7 +72,6 @@ module "vm" {
   for_each                   = local.instances
   availability_domain        = each.value.availability_domain
   compartment_id             = var.compartment_ids[each.value.compartment_name]
-  agent_config               = each.value.agent_config
   enable_vnic_lookup_outputs = false
   create_vnic_details        = each.value.create_vnic_details
   display_name               = each.value.display_name
