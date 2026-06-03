@@ -63,8 +63,8 @@ module "sn" {
   dns_label                  = each.value.dns_label
   prohibit_internet_ingress  = each.value.prohibit_internet_ingress
   prohibit_public_ip_on_vnic = each.value.prohibit_public_ip_on_vnic
-  route_table_id             = try(module.rt[each.value.route_table_name].id, null)
-  security_list_ids          = try([for name in each.value.security_list_names : module.sl[name].id], null)
+  route_table_id             = each.value.route_table_name == null ? null : module.rt[each.value.route_table_name].id
+  security_list_ids          = length(each.value.security_list_names) == 0 ? null : [for name in each.value.security_list_names : module.sl[name].id]
 }
 
 module "vm" {
