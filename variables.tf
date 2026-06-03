@@ -51,6 +51,7 @@ variable "service_gateways" {
   type = map(object({
     display_name = string
     vcn_name     = string
+    service_name = optional(string, "services")
   }))
   default = {}
 }
@@ -67,16 +68,16 @@ variable "security_lists" {
       destination      = string
       destination_type = string
       tcp_options = optional(object({
-	min = number
-	max = number
+        min = number
+        max = number
       }))
       udp_options = optional(object({
-	min = number
-	max = number
+        min = number
+        max = number
       }))
       icmp_options = optional(object({
-	type = number
-	code = number
+        type = number
+        code = number
       }))
     }))
     ingress_rules = list(object({
@@ -86,16 +87,16 @@ variable "security_lists" {
       source_type = string
 
       tcp_options = optional(object({
-	min = number
-	max = number
+        min = number
+        max = number
       }))
       udp_options = optional(object({
-	min = number
-	max = number
+        min = number
+        max = number
       }))
       icmp_options = optional(object({
-	type = number
-	code = number
+        type = number
+        code = number
       }))
     }))
   }))
@@ -134,8 +135,8 @@ variable "subnets" {
     dns_label                  = string
     prohibit_internet_ingress  = optional(bool)
     prohibit_public_ip_on_vnic = bool
-    sl_name                    = string
-    rt_name                    = string
+    security_list_names        = optional(list(string), [])
+    route_table_name           = optional(string)
     vcn_name                   = string
   }))
   default = {}

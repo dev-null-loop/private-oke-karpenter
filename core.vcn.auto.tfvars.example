@@ -25,6 +25,7 @@ service_gateways = {
   sg = {
     display_name = "sg"
     vcn_name     = "vcn"
+    service_name = "services"
   },
 }
 
@@ -34,8 +35,8 @@ subnets = {
     cidr_block                 = "10.0.20.0/24"
     dns_label                  = "svcslb"
     prohibit_public_ip_on_vnic = false
-    sl_name                    = "svcs_lb"
-    rt_name                    = "public"
+    security_list_names        = ["svcs_lb"]
+    route_table_name           = "public"
     vcn_name                   = "vcn"
     compartment_name           = "dev"
   },
@@ -45,8 +46,8 @@ subnets = {
     dns_label                  = "nodes"
     prohibit_internet_ingress  = true
     prohibit_public_ip_on_vnic = true
-    sl_name                    = "nodes"
-    rt_name                    = "private"
+    security_list_names        = ["nodes"]
+    route_table_name           = "private"
     vcn_name                   = "vcn"
     compartment_name           = "dev"
   },
@@ -56,8 +57,8 @@ subnets = {
     dns_label                  = "apiendpoint"
     prohibit_internet_ingress  = true
     prohibit_public_ip_on_vnic = true
-    sl_name                    = "api_endpoint"
-    rt_name                    = "private"
+    security_list_names        = ["api_endpoint"]
+    route_table_name           = "private"
     vcn_name                   = "vcn"
     compartment_name           = "dev"
   },

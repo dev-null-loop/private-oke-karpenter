@@ -1,6 +1,6 @@
 module "clusters" {
   source             = "git@github.com:dev-null-loop/oci_containerengine//cluster"
-  for_each           = var.clusters
+  for_each           = local.clusters
   compartment_id     = var.compartment_ids[each.value.compartment_name]
   name               = each.value.name
   kubernetes_version = each.value.kubernetes_version
@@ -8,36 +8,27 @@ module "clusters" {
   cluster_pod_network_options = {
     cni_type = each.value.cni_type
   }
-  endpoint_config = {
-    subnet_id            = module.sn[each.value.endpoint_config.subnet_name].id
-    is_public_ip_enabled = each.value.endpoint_config.is_public_ip_enabled
-  }
-  options = {
-    service_lb_subnet_ids = [
-      for k in each.value.options.service_lb_subnet_names :
-      lookup({ for k, v in module.sn : k => v.id }, k)
-    ]
-    open_id_connect_discovery = each.value.options.open_id_connect_discovery
-  }
+  endpoint_config = each.value.endpoint_config
+  options         = each.value.options
 }
 
 module "node_pools" {
   source                           = "git@github.com:dev-null-loop/oci_containerengine//node_pool"
-  for_each                         = var.node_pools
+  for_each                         = local.node_pools
   cluster_id                       = module.clusters[each.value.cluster_name].id
   compartment_id                   = var.compartment_ids[each.value.compartment_name]
   kubernetes_version               = each.value.kubernetes_version
   name                             = each.value.name
   node_source_details              = each.value.node_source_details
-  image_id                         = var.oke_worker_node_image_ids[each.value.node_source_details.image_name]
+  image_id                         = each.value.image_id
   cloud_init                       = each.value.cloud_init
   node_config_details              = each.value.node_config_details
   node_eviction_node_pool_settings = each.value.node_eviction_node_pool_settings
   node_shape                       = each.value.node_shape
   node_shape_config                = each.value.node_shape_config
   ssh_public_key                   = each.value.ssh_public_key
-  subnet_ids                       = { for k, v in module.sn : k => v.id }
-  pod_subnet_ids                   = { for k, v in module.sn : k => v.id }
+  subnet_ids                       = each.value.subnet_ids
+  pod_subnet_ids                   = each.value.pod_subnet_ids
 }
 
 module "kubeconfig" {
