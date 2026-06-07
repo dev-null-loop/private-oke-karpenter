@@ -47,7 +47,7 @@ module "kubeconfig" {
 #     merge(each.value.configurations,
 #       {
 #	compartmentId        = var.compartment_ids[each.value.compartment_name],
-#	loadBalancerSubnetId = module.sn[each.value.load_balancer_subnet_name].id
+#	loadBalancerSubnetId = module.subnets[each.value.load_balancer_subnet_name].id
 #       }
 #     ) :
 #     each.value.addon_name == "ClusterAutoscaler" ?

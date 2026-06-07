@@ -1,3 +1,99 @@
+vcns = {
+  vcn = {
+    cidr_blocks      = ["10.0.0.0/16"]
+    display_name     = "vcn"
+    dns_label        = "vcn"
+    compartment_name = "dev"
+    is_ipv6enabled   = true
+  },
+}
+
+internet_gateways = {
+  ig = {
+    vcn_name = "vcn"
+  },
+}
+
+nat_gateways = {
+  ng = {
+    display_name = "ng"
+    vcn_name     = "vcn"
+  },
+}
+
+service_gateways = {
+  sg = {
+    display_name = "sg"
+    vcn_name     = "vcn"
+    service_name = "services"
+  },
+}
+
+subnets = {
+  svcs_lb = {
+    display_name               = "svcs_lb"
+    cidr_block                 = "10.0.20.0/24"
+    dns_label                  = "svcslb"
+    prohibit_public_ip_on_vnic = false
+    security_list_names        = ["svcs_lb"]
+    route_table_name           = "public"
+    vcn_name                   = "vcn"
+    compartment_name           = "dev"
+  },
+  nodes = {
+    display_name               = "nodes"
+    cidr_block                 = "10.0.10.0/24"
+    dns_label                  = "nodes"
+    prohibit_internet_ingress  = true
+    prohibit_public_ip_on_vnic = true
+    security_list_names        = ["nodes"]
+    route_table_name           = "private"
+    vcn_name                   = "vcn"
+    compartment_name           = "dev"
+  },
+  api_endpoint = {
+    display_name               = "api_endpoint"
+    cidr_block                 = "10.0.0.0/28"
+    dns_label                  = "apiendpoint"
+    prohibit_internet_ingress  = true
+    prohibit_public_ip_on_vnic = true
+    security_list_names        = ["api_endpoint"]
+    route_table_name           = "private"
+    vcn_name                   = "vcn"
+    compartment_name           = "dev"
+  },
+}
+route_tables = {
+  public = {
+    display_name = "public"
+    vcn_name     = "vcn"
+    route_rules = [
+      {
+	destination         = "0.0.0.0/0"
+	destination_type    = "CIDR_BLOCK"
+	network_entity_name = "ig_ig"
+      },
+    ],
+  },
+  private = {
+    display_name = "private"
+    vcn_name     = "vcn"
+    route_rules = [
+      {
+	description         = "traffic to OCI services"
+	destination         = "services"
+	destination_type    = "SERVICE_CIDR_BLOCK"
+	network_entity_name = "sg_sg"
+      },
+      {
+	description         = "traffic to the internet"
+	destination         = "0.0.0.0/0"
+	destination_type    = "CIDR_BLOCK"
+	network_entity_name = "ng_ng"
+      }
+    ],
+  },
+}
 security_lists = {
   svcs_lb = {
     vcn_name     = "vcn"
@@ -274,6 +370,46 @@ security_lists = {
 	source      = "10.0.0.0/28"
 	source_type = "CIDR_BLOCK"
 	stateless   = false
+      }
+    ]
+  }
+}
+source_ids = {
+  "Oracle-Linux-9.6-2025.09.16-0" = "ocid1.image.oc1.."
+}
+
+instances = {
+  bastion = {
+    compartment_name    = "dev"
+    availability_domain = 1
+    create_vnic_details = {
+      assign_public_ip = true
+      subnet_name      = "svcs_lb"
+    }
+    display_name = "bastion"
+    shape        = "VM.Standard.E5.Flex"
+    shape_config = {
+      memory_in_gbs = 16
+      ocpus         = 2
+    }
+    source_details = {
+      source_name = "Oracle-Linux-9.6-2025.09.16-0"
+    }
+    ssh_public_keys = [
+      "ssh-rsa ..."
+    ]
+    managed_cluster = "c"
+    cloud_init = [
+      {
+	content_type = "text/cloud-config"
+	filename     = "userdata/helm.yaml.tftpl"
+	vars = {
+	  filename = "kubeconfig"
+	}
+      },
+      {
+	content_type = "text/cloud-config"
+	filename     = "userdata/karpenter.yaml.tftpl"
       }
     ]
   }

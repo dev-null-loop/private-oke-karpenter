@@ -6,9 +6,9 @@ data "oci_identity_availability_domains" "ads" {
 
 locals {
   network_entity_ids = merge(
-    { for k, v in module.ig : "ig_${k}" => v.id },
-    { for k, v in module.ng : "ng_${k}" => v.id },
-    { for k, v in module.sg : "sg_${k}" => v.id }
+    { for k, v in module.internet_gateways : "ig_${k}" => v.id },
+    { for k, v in module.nat_gateways : "ng_${k}" => v.id },
+    { for k, v in module.service_gateways : "sg_${k}" => v.id }
   )
 
   services = {
@@ -50,7 +50,7 @@ locals {
     for k, v in var.instances : k => merge(v, {
       availability_domain = local.availability_domains[v.availability_domain]
       create_vnic_details = merge(v.create_vnic_details, {
-        subnet_id = try(module.sn[v.create_vnic_details.subnet_name].id, v.create_vnic_details.subnet_id)
+        subnet_id = try(module.subnets[v.create_vnic_details.subnet_name].id, v.create_vnic_details.subnet_id)
       })
       source_details = merge(v.source_details, {
         source_id = var.source_ids[v.source_details.source_name]
@@ -87,10 +87,10 @@ locals {
   clusters = {
     for k, v in var.clusters : k => merge(v, {
       endpoint_config = merge(v.endpoint_config, {
-        subnet_id = module.sn[v.endpoint_config.subnet_name].id
+        subnet_id = module.subnets[v.endpoint_config.subnet_name].id
       })
       options = v.options != null ? merge(v.options, {
-        service_lb_subnet_ids = [for name in try(v.options.service_lb_subnet_names, []) : module.sn[name].id]
+        service_lb_subnet_ids = [for name in try(v.options.service_lb_subnet_names, []) : module.subnets[name].id]
       }) : null
     })
   }
@@ -98,8 +98,8 @@ locals {
   node_pools = {
     for k, v in var.node_pools : k => merge(v, {
       image_id       = var.oke_worker_node_image_ids[v.node_source_details.image_name]
-      subnet_ids     = { for name, subnet in module.sn : name => subnet.id }
-      pod_subnet_ids = { for name, subnet in module.sn : name => subnet.id }
+      subnet_ids     = { for name, subnet in module.subnets : name => subnet.id }
+      pod_subnet_ids = { for name, subnet in module.subnets : name => subnet.id }
     })
   }
 }

@@ -8,9 +8,9 @@ locals {
     null
   )
 
-  karpenter_primary_subnet_id = try(module.sn[var.karpenter.ocinodeclass.primary_subnet_name].id, null)
+  karpenter_primary_subnet_id = try(module.subnets[var.karpenter.ocinodeclass.primary_subnet_name].id, null)
   karpenter_pod_subnet_ids = [
-    for n in try(var.karpenter.ocinodeclass.pod_subnet_names, []) : module.sn[n].id
+    for n in try(var.karpenter.ocinodeclass.pod_subnet_names, []) : module.subnets[n].id
   ]
 
   karpenter_ocinodeclass_secondary_vnic_configs = (
