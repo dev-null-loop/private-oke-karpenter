@@ -16,12 +16,12 @@ locals {
   karpenter_ocinodeclass_secondary_vnic_configs = (
     try(var.karpenter.ocinodeclass.secondary_vnic_ip_count, null) != null ? [
       for sid in(
-	try(var.karpenter.ocinodeclass.use_same_node_and_pod_subnet, false) ?
-	[local.karpenter_primary_subnet_id] :
-	local.karpenter_pod_subnet_ids
-	) : {
-	subnet_id = sid
-	ip_count  = var.karpenter.ocinodeclass.secondary_vnic_ip_count
+        try(var.karpenter.ocinodeclass.use_same_node_and_pod_subnet, false) ?
+        [local.karpenter_primary_subnet_id] :
+        local.karpenter_pod_subnet_ids
+        ) : {
+        subnet_id = sid
+        ip_count  = var.karpenter.ocinodeclass.secondary_vnic_ip_count
       }
     ] : []
   )
@@ -42,60 +42,60 @@ locals {
     }
     spec = merge(
       length(var.karpenter.ocinodeclass.shape_configs) > 0 ? {
-	shapeConfigs = [
-	  for cfg in var.karpenter.ocinodeclass.shape_configs : merge(
-	    {
-	      ocpus       = cfg.ocpus
-	      memoryInGbs = cfg.memory_in_gbs
-	    },
-	    try(cfg.baseline_ocpu_utilization, null) != null ? {
-	      baselineOcpuUtilization = cfg.baseline_ocpu_utilization
-	    } : {}
-	  )
-	]
+        shapeConfigs = [
+          for cfg in var.karpenter.ocinodeclass.shape_configs : merge(
+            {
+              ocpus       = cfg.ocpus
+              memoryInGbs = cfg.memory_in_gbs
+            },
+            try(cfg.baseline_ocpu_utilization, null) != null ? {
+              baselineOcpuUtilization = cfg.baseline_ocpu_utilization
+            } : {}
+          )
+        ]
       } : {},
       {
-	volumeConfig = {
-	  bootVolumeConfig = {
-	    imageConfig = merge(
-	      {
-		imageType = try(var.karpenter.ocinodeclass.image_config.image_type, "OKEImage")
-	      },
-	      try(var.karpenter.ocinodeclass.image_config.image_id, null) != null ? {
-		imageId = var.karpenter.ocinodeclass.image_config.image_id
-	      } : {},
-	      try(var.karpenter.ocinodeclass.image_config.image_id, null) == null ? {
-		imageFilter = merge(
-		  try(var.karpenter.ocinodeclass.image_config.os_filter, null) != null ? {
-		    osFilter = var.karpenter.ocinodeclass.image_config.os_filter
-		  } : {},
-		  try(var.karpenter.ocinodeclass.image_config.os_version_filter, null) != null ? {
-		    osVersionFilter = var.karpenter.ocinodeclass.image_config.os_version_filter
-		  } : {}
-		)
-	      } : {}
-	    )
-	  }
-	}
-	networkConfig = merge(
-	  {
-	    primaryVnicConfig = {
-	      subnetConfig = {
-		subnetId = local.karpenter_primary_subnet_id
-	      }
-	    }
-	  },
-	  length(local.karpenter_ocinodeclass_secondary_vnic_configs) > 0 ? {
-	    secondaryVnicConfigs = [
-	      for cfg in local.karpenter_ocinodeclass_secondary_vnic_configs : {
-		subnetConfig = {
-		  subnetId = cfg.subnet_id
-		}
-		ipCount = cfg.ip_count
-	      }
-	    ]
-	  } : {}
-	)
+        volumeConfig = {
+          bootVolumeConfig = {
+            imageConfig = merge(
+              {
+                imageType = try(var.karpenter.ocinodeclass.image_config.image_type, "OKEImage")
+              },
+              try(var.karpenter.ocinodeclass.image_config.image_id, null) != null ? {
+                imageId = var.karpenter.ocinodeclass.image_config.image_id
+              } : {},
+              try(var.karpenter.ocinodeclass.image_config.image_id, null) == null ? {
+                imageFilter = merge(
+                  try(var.karpenter.ocinodeclass.image_config.os_filter, null) != null ? {
+                    osFilter = var.karpenter.ocinodeclass.image_config.os_filter
+                  } : {},
+                  try(var.karpenter.ocinodeclass.image_config.os_version_filter, null) != null ? {
+                    osVersionFilter = var.karpenter.ocinodeclass.image_config.os_version_filter
+                  } : {}
+                )
+              } : {}
+            )
+          }
+        }
+        networkConfig = merge(
+          {
+            primaryVnicConfig = {
+              subnetConfig = {
+                subnetId = local.karpenter_primary_subnet_id
+              }
+            }
+          },
+          length(local.karpenter_ocinodeclass_secondary_vnic_configs) > 0 ? {
+            secondaryVnicConfigs = [
+              for cfg in local.karpenter_ocinodeclass_secondary_vnic_configs : {
+                subnetConfig = {
+                  subnetId = cfg.subnet_id
+                }
+                ipCount = cfg.ip_count
+              }
+            ]
+          } : {}
+        )
       }
     )
   }) : null
@@ -108,44 +108,44 @@ locals {
     }
     spec = {
       template = {
-	spec = {
-	  expireAfter            = var.karpenter.nodepool.expire_after
-	  terminationGracePeriod = var.karpenter.nodepool.termination_grace_period
-	  nodeClassRef = {
-	    group = "oci.oraclecloud.com"
-	    kind  = "OCINodeClass"
-	    name  = var.karpenter.ocinodeclass.name
-	  }
-	  requirements = [
-	    {
-	      key      = "karpenter.sh/capacity-type"
-	      operator = "In"
-	      values   = var.karpenter.nodepool.capacity_types
-	    },
-	    {
-	      key      = "oci.oraclecloud.com/instance-shape"
-	      operator = "In"
-	      values   = var.karpenter.nodepool.instance_shapes
-	    }
-	  ]
-	}
+        spec = {
+          expireAfter            = var.karpenter.nodepool.expire_after
+          terminationGracePeriod = var.karpenter.nodepool.termination_grace_period
+          nodeClassRef = {
+            group = "oci.oraclecloud.com"
+            kind  = "OCINodeClass"
+            name  = var.karpenter.ocinodeclass.name
+          }
+          requirements = [
+            {
+              key      = "karpenter.sh/capacity-type"
+              operator = "In"
+              values   = var.karpenter.nodepool.capacity_types
+            },
+            {
+              key      = "oci.oraclecloud.com/instance-shape"
+              operator = "In"
+              values   = var.karpenter.nodepool.instance_shapes
+            }
+          ]
+        }
       }
       disruption = {
-	budgets = [
-	  {
-	    nodes = var.karpenter.nodepool.budget_nodes
-	  }
-	]
-	consolidateAfter    = var.karpenter.nodepool.consolidate_after
-	consolidationPolicy = var.karpenter.nodepool.consolidation_policy
+        budgets = [
+          {
+            nodes = var.karpenter.nodepool.budget_nodes
+          }
+        ]
+        consolidateAfter    = var.karpenter.nodepool.consolidate_after
+        consolidationPolicy = var.karpenter.nodepool.consolidation_policy
       }
       limits = merge(
-	{
-	  cpu = var.karpenter.nodepool.cpu_limit
-	},
-	try(var.karpenter.nodepool.memory_limit, null) != null ? {
-	  memory = var.karpenter.nodepool.memory_limit
-	} : {}
+        {
+          cpu = var.karpenter.nodepool.cpu_limit
+        },
+        try(var.karpenter.nodepool.memory_limit, null) != null ? {
+          memory = var.karpenter.nodepool.memory_limit
+        } : {}
       )
     }
   }) : null
@@ -159,39 +159,39 @@ locals {
     spec = {
       replicas = var.karpenter.repro.replicas
       selector = {
-	matchLabels = {
-	  app = "issue-25-burst"
-	}
+        matchLabels = {
+          app = "issue-25-burst"
+        }
       }
       template = {
-	metadata = {
-	  labels = {
-	    app = "issue-25-burst"
-	  }
-	}
-	spec = {
-	  nodeSelector = {
-	    "karpenter.sh/nodepool" = var.karpenter.nodepool.name
-	  }
-	  tolerations = [
-	    {
-	      operator = "Exists"
-	    }
-	  ]
-	  containers = [
-	    {
-	      name    = "main"
-	      image   = var.karpenter.repro.image
-	      command = ["sh", "-c", "sleep ${var.karpenter.repro.sleep_seconds}"]
-	      resources = {
-		requests = {
-		  cpu    = var.karpenter.repro.cpu
-		  memory = var.karpenter.repro.memory
-		}
-	      }
-	    }
-	  ]
-	}
+        metadata = {
+          labels = {
+            app = "issue-25-burst"
+          }
+        }
+        spec = {
+          nodeSelector = {
+            "karpenter.sh/nodepool" = var.karpenter.nodepool.name
+          }
+          tolerations = [
+            {
+              operator = "Exists"
+            }
+          ]
+          containers = [
+            {
+              name    = "main"
+              image   = var.karpenter.repro.image
+              command = ["sh", "-c", "sleep ${var.karpenter.repro.sleep_seconds}"]
+              resources = {
+                requests = {
+                  cpu    = var.karpenter.repro.cpu
+                  memory = var.karpenter.repro.memory
+                }
+              }
+            }
+          ]
+        }
       }
     }
   }) : null
@@ -237,9 +237,9 @@ output "karpenter" {
     nodepool_file           = try(local_file.karpenter_nodepool[0].filename, null)
     repro_workload_file     = try(local_file.karpenter_repro_workload[0].filename, null)
     collect_debug_file      = try(local_file.karpenter_collect_debug[0].filename, null)
-    bastion_public_ip       = try(module.vm[var.karpenter.bastion_instance_name].public_ip, null)
+    bastion_public_ip       = try(module.instances[var.karpenter.bastion_instance_name].public_ip, null)
     kubeconfig_ip_principal = try(module.kubeconfig[var.karpenter.cluster_name].kubeconfig_instance_principal, null)
     apiserver_endpoint      = local.karpenter_apiserver_endpoint
-    install_command         = try("ssh opc@${module.vm[var.karpenter.bastion_instance_name].public_ip}", null)
+    install_command         = try("ssh opc@${module.instances[var.karpenter.bastion_instance_name].public_ip}", null)
   } : null
 }

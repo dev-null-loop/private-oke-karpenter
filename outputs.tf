@@ -1,6 +1,6 @@
 output "sshuttle" {
   value = [for k, v in var.instances :
-    "sshuttle -x ${module.vm[k].public_ip} --dns -NHr opc@${module.vm[k].public_ip} ${module.vcns[var.subnets[v.create_vnic_details.subnet_name].vcn_name].cidr_blocks[0]}"
+    "sshuttle -x ${module.instances[k].public_ip} --dns -NHr opc@${module.instances[k].public_ip} ${module.vcns[var.subnets[v.create_vnic_details.subnet_name].vcn_name].cidr_blocks[0]}"
   ]
 }
 
@@ -21,7 +21,7 @@ output "vcns" {
 }
 
 output "instances" {
-  value = { for k, v in module.vm :
+  value = { for k, v in module.instances :
     k => {
       id         = v.id
       public_ip  = v.public_ip == "" ? null : v.public_ip

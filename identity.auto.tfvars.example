@@ -1,0 +1,9 @@
+tenancy_ocid     = "ocid1.tenancy.oc1.."
+fingerprint      = "..."
+private_key_path = "..."
+region           = "..."
+user_ocid        = "ocid1.user.oc1.."
+compartment_ids = {
+  dev = "ocid1.compartment.oc1.."
+}
+home_region = "..."
