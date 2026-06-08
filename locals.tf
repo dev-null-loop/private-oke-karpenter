@@ -1,4 +1,4 @@
-data "oci_core_services" "these" {}
+data "oci_core_services" "all" {}
 
 data "oci_identity_availability_domains" "ads" {
   compartment_id = var.tenancy_ocid
@@ -12,7 +12,7 @@ locals {
   )
 
   services = {
-    for svc in data.oci_core_services.these.services :
+    for svc in data.oci_core_services.all.services :
     (startswith(lower(svc.cidr_block), "all-") ? "services" : "objectstorage") => {
       cidr_block = svc.cidr_block
       id         = svc.id
