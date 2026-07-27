@@ -29,8 +29,7 @@ node_pools = {
     kubernetes_version = "v1.33.1"
     name               = "pool"
     node_source_details = {
-      image_name  = "Oracle-Linux-8.10-2026.02.28-0-OKE-1.33.10-1402"
-      source_type = "IMAGE"
+      image_name = "Oracle-Linux-8.10-2026.02.28-0-OKE-1.33.10-1402"
     }
     cloud_init = [
       {

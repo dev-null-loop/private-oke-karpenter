@@ -1,7 +1,6 @@
 output "clusters" {
   value = { for k, v in module.clusters :
     k => {
-      id                        = v.id
       endpoints                 = v.endpoints
       kubernetes_network_config = v.kubernetes_network_config
       service_lb_subnet_ids     = v.service_lb_subnet_ids

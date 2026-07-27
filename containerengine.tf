@@ -13,7 +13,7 @@ module "clusters" {
 }
 
 module "node_pools" {
-  source                           = "git@github.com:dev-null-loop/oci_containerengine//node_pool"
+  source                           = "../oci_containerengine/node_pool"
   for_each                         = local.node_pools
   cluster_id                       = module.clusters[each.value.cluster_name].id
   compartment_id                   = var.compartment_ids[each.value.compartment_name]
@@ -27,8 +27,6 @@ module "node_pools" {
   node_shape                       = each.value.node_shape
   node_shape_config                = each.value.node_shape_config
   ssh_public_key                   = each.value.ssh_public_key
-  subnet_ids                       = each.value.subnet_ids
-  pod_subnet_ids                   = each.value.pod_subnet_ids
 }
 
 module "kubeconfig" {

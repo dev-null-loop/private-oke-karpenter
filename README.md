@@ -1,20 +1,22 @@
 # private_oke_karpenter
 
-Private OKE baseline plus OCI Karpenter (KPO) install and repro harness.
+Private OKE baseline plus OCI Karpenter (KPO) install and validation harness.
 
 This repo is derived from `private_oke_oidc`, but scoped for:
 - private OKE cluster creation
 - bootstrap node pool creation
 - bastion VM access path
-- OCI Karpenter Helm install support
+- OCI Karpenter Helm/GitOps support
 - generated `OCINodeClass` and `NodePool` manifests
-- optional reproduction mode for Oracle KPO issue #25 (`NativePodNetwork` / secondary VNIC IP allocation failures)
+- Fortinet-style public-worker validation with OCI VCN-native pod networking
+- optional synthetic test workload generation
 
 ## Flow
 
 1. `terraform apply` builds the private OKE cluster, bootstrap node pool, bastion VM, and kubeconfig.
-2. Terraform renders Karpenter files under `generated/`.
-3. Use the bastion with the generated instance-principal kubeconfig to install KPO and apply the generated manifests.
+2. Terraform can render Karpenter files under `addons/karpenter/generated/` for inspection.
+3. Bastion cloud-init uses the generated instance-principal kubeconfig to bootstrap Argo CD into the private cluster.
+4. Argo CD should then own KPO and any customer or issue-specific manifests.
 
 
 ## Prerequisites
@@ -87,38 +89,37 @@ Allow dynamic-group <domain-name>/<dynamic-group-name> to {CLUSTER_JOIN} in comp
 
 - This repo is designed for private OKE clusters.
 - KPO should be installed from the bastion or another host that can reach the private API endpoint.
-- For issue #25 reproduction, use OCI VCN-native pod networking and expose the secondary-VNIC tuning knobs through the `karpenter` variables.
+- For the Fortinet investigation path, use a public `nodes` subnet for the worker primary VNIC and keep KPO pod IP allocation on a dedicated private `kpo_pods` subnet.
+- `primary_vnic_config.assign_public_ip = true` controls whether Karpenter-launched workers request a public IP on the primary VNIC.
+- `secondary_vnic_config` controls only the additional VNICs that back OCI VCN-native pod IP allocation. It does not by itself prove that normal pod egress will SNAT behind the worker public IP.
+- The optional synthetic workload under `karpenter.test_workload` is just a convenient pending-workload trigger. It is not specific to Fortinet unless you explicitly enable it for that purpose.
 - For long-term KPO operation with secondary VNICs, separate node and pod subnets are usually safer than reusing the same subnet, because IP fragmentation can cause NativePodNetwork failures even when total free IP count looks high.
 
-## Issue #25 Repro Note
+## Fortinet Validation Mode
 
-The current default repro-oriented settings are intentionally capable of reproducing the issue-25 failure pattern:
+The example files are biased toward the Fortinet/KPO validation path:
 
-- `oci_vcn_ip_native = true`
-- `use_same_node_and_pod_subnet = true`
-- `secondary_vnic_ip_count = 32`
-- a relatively small shared node/pod subnet
+- bootstrap node pool stays in Terraform
+- Karpenter workers use the public `nodes` subnet as their primary subnet
+- KPO pod IP allocation uses a separate private `kpo_pods` subnet
+- the synthetic test workload is disabled by default
 
-In that mode, OCI Karpenter can successfully launch instances and create `NodeClaim` objects, but the nodes may still fail to register if OCI Native Pod Network cannot allocate a contiguous IPv4 flexible CIDR block for pod IPs.
+This keeps the repo aligned with the actual question being investigated:
 
-The key live signal is usually:
+- can Karpenter-launched public workers plus OCI VCN-native pod networking produce the Fortinet-requested egress behavior
 
-```text
-CreatePrivateIPFailed
-Unable to create IPv4 Flexible Cidr: Not enough capacity for allocating cidr of length 27
-```
-
-This means the stack is reproducing the same class of problem as GitHub issue #25: aggregate free IP count may still exist, but the subnet does not have enough contiguous address space for the requested secondary-VNIC pod allocation.
+The answer still depends on live runtime validation, but these defaults keep the repo aligned with the Fortinet path instead of an older bug-reproduction path.
 
 ## Files
 
-- `karpenter.tf`: rendered file outputs and helper commands
-- `karpenter.variables.tf`: operator and repro settings
+- `karpenter.tf`: thin root module call and user-facing outputs
+- `karpenter.variables.tf`: operator and test-workload settings
 - `karpenter.auto.tfvars.example`: example Karpenter settings
-- `karpenter/*.tftpl`: rendered KPO values, `OCINodeClass`, `NodePool`, repro workload, and debug script
+- `addons/karpenter/*`: addon rendering logic, generated KPO files, and debug script
+- `userdata/argocd-bootstrap.yaml.tftpl`: minimal private-OKE Argo CD bootstrap
 
 ## Important notes
 
 - Keep one bootstrap node pool in Terraform. KPO should not bootstrap itself from zero.
 - If you use OCI VCN-native pod networking, set `ociVcnIpNative=true` in the KPO values.
-- For issue #25 reproduction, explicit secondary-VNIC configuration and pod-subnet control are the important knobs.
+- For separate OCI VCN-native pod subnets, explicit secondary-VNIC configuration and pod-subnet control are the important knobs.

@@ -5,7 +5,7 @@ KUBECONFIG_PATH="${kubeconfig_path}"
 VALUES_PATH="${values_path}"
 OCINODECLASS_PATH="${ocinodeclass_path}"
 NODEPOOL_PATH="${nodepool_path}"
-REPRO_PATH="${repro_path}"
+TEST_WORKLOAD_PATH="${test_workload_path}"
 CHART_VERSION="${chart_version}"
 NAMESPACE="${namespace}"
 RELEASE_NAME="${release_name}"
@@ -24,6 +24,6 @@ helm upgrade --install "$RELEASE_NAME" karpenter-provider-oci/karpenter \
 kubectl apply -f "$OCINODECLASS_PATH"
 kubectl apply -f "$NODEPOOL_PATH"
 
-if [ -f "$REPRO_PATH" ]; then
-  kubectl apply -f "$REPRO_PATH"
+if [ -f "$TEST_WORKLOAD_PATH" ]; then
+  kubectl apply -f "$TEST_WORKLOAD_PATH"
 fi

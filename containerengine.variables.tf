@@ -5,12 +5,12 @@ variable "clusters" {
     kubernetes_version = string
     vcn_name           = string
     cni_type           = string
-    endpoint_config = object({
+    endpoint_config = optional(object({
       subnet_name          = string
       is_public_ip_enabled = bool
-    })
+    }))
     options = optional(object({
-      service_lb_subnet_names = optional(list(string))
+      service_lb_subnet_names = optional(list(string), [])
       open_id_connect_discovery = optional(object({
         is_open_id_connect_discovery_enabled = optional(bool)
       }))
@@ -30,13 +30,12 @@ variable "node_pools" {
       memory_in_gbs = optional(number)
     }))
     kubernetes_version = string
-    subnet_ids         = optional(map(string))
     ubuntu_release     = optional(string)
     ssh_public_key     = optional(string)
     node_config_details = object({
       placement_configs = list(object({
         availability_domain     = number
-        fault_domain            = optional(number)
+        fault_domains           = optional(list(number), [])
         subnet_name             = string
         capacity_reservation_id = optional(string)
       }))
@@ -46,7 +45,7 @@ variable "node_pools" {
       node_pool_pod_network_option_details = optional(object({
         cni_type          = string
         max_pods_per_node = optional(number)
-        pod_subnet_names  = optional(list(string))
+        pod_subnet_names  = optional(list(string), [])
         pod_nsg_ids       = optional(list(string))
       }))
       defined_tags  = optional(map(string))

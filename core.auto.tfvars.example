@@ -44,9 +44,20 @@ subnets = {
     display_name               = "nodes"
     cidr_block                 = "10.0.10.0/24"
     dns_label                  = "nodes"
+    prohibit_internet_ingress  = false
+    prohibit_public_ip_on_vnic = false
+    security_list_names        = ["nodes"]
+    route_table_name           = "public"
+    vcn_name                   = "vcn"
+    compartment_name           = "dev"
+  },
+  kpo_pods = {
+    display_name               = "kpo_pods"
+    cidr_block                 = "10.0.30.0/24"
+    dns_label                  = "kpopods"
     prohibit_internet_ingress  = true
     prohibit_public_ip_on_vnic = true
-    security_list_names        = ["nodes"]
+    security_list_names        = ["kpo_pods"]
     route_table_name           = "private"
     vcn_name                   = "vcn"
     compartment_name           = "dev"
@@ -373,6 +384,96 @@ security_lists = {
       }
     ]
   }
+  kpo_pods = {
+    vcn_name     = "vcn"
+    display_name = "kpo_pods"
+    egress_rules = [
+      {
+	description      = "Access to Kubernetes API Endpoint"
+	destination      = "10.0.0.0/28"
+	destination_type = "CIDR_BLOCK"
+	protocol         = "6"
+	stateless        = false
+	tcp_options = {
+	  max = 6443
+	  min = 6443
+	}
+      },
+      {
+	description      = "Allow KPO pods to communicate with OKE services"
+	destination      = "services"
+	destination_type = "SERVICE_CIDR_BLOCK"
+	protocol         = "6"
+	stateless        = false
+	tcp_options = {
+	  max = 443
+	  min = 443
+	}
+      },
+      {
+	description      = "Allow KPO pods to communicate with each other"
+	destination      = "10.0.30.0/24"
+	destination_type = "CIDR_BLOCK"
+	protocol         = "all"
+	stateless        = false
+      },
+      {
+	description      = "Allow KPO pods to communicate with nodes"
+	destination      = "10.0.10.0/24"
+	destination_type = "CIDR_BLOCK"
+	protocol         = "all"
+	stateless        = false
+      },
+      {
+	description      = "KPO pod subnet internet egress"
+	destination      = "0.0.0.0/0"
+	destination_type = "CIDR_BLOCK"
+	protocol         = "all"
+	stateless        = false
+      },
+      {
+	description      = "Path discovery"
+	destination      = "10.0.0.0/28"
+	destination_type = "CIDR_BLOCK"
+	protocol         = "1"
+	stateless        = false
+	icmp_options = {
+	  code = 4
+	  type = 3
+	}
+      }
+    ]
+    ingress_rules = [
+      {
+	protocol    = "1"
+	source      = "10.0.0.0/28"
+	source_type = "CIDR_BLOCK"
+	stateless   = false
+	icmp_options = {
+	  code = 4
+	  type = 3
+	}
+      },
+      {
+	protocol    = "6"
+	source      = "10.0.0.0/28"
+	source_type = "CIDR_BLOCK"
+	stateless   = false
+      },
+      {
+	protocol    = "all"
+	source      = "10.0.10.0/24"
+	source_type = "CIDR_BLOCK"
+	stateless   = false
+      },
+      {
+	protocol    = "all"
+	source      = "10.0.30.0/24"
+	source_type = "CIDR_BLOCK"
+	stateless   = false
+      }
+    ]
+  }
 }
 source_ids = {
   "Oracle-Linux-9.6-2025.09.16-0" = "ocid1.image.oc1.."
@@ -403,13 +504,16 @@ instances = {
       {
 	content_type = "text/cloud-config"
 	filename     = "userdata/helm.yaml.tftpl"
-	vars = {
-	  filename = "kubeconfig"
-	}
+	vars         = { filename = "kubeconfig" }
       },
       {
 	content_type = "text/cloud-config"
-	filename     = "userdata/karpenter.yaml.tftpl"
+	filename     = "userdata/argocd-bootstrap.yaml.tftpl"
+	vars = {
+	  argocd_namespace     = "argocd"
+	  argocd_release_name  = "argocd"
+	  argocd_chart_version = "8.4.0"
+	}
       }
     ]
   }

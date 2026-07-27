@@ -8,7 +8,6 @@ output "vcns" {
   value = { for k, v in module.vcns :
     k => {
       display_name = v.display_name
-      id           = v.id
       cidr_blocks  = v.cidr_blocks
       subnets = [for i, j in module.subnets :
         {
@@ -23,7 +22,6 @@ output "vcns" {
 output "instances" {
   value = { for k, v in module.instances :
     k => {
-      id         = v.id
       public_ip  = v.public_ip == "" ? null : v.public_ip
       private_ip = v.private_ip
     }

@@ -1,5 +1,5 @@
 variable "karpenter" {
-  description = "OCI Karpenter / KPO install and repro settings"
+  description = "OCI Karpenter / KPO install and optional synthetic test workload settings"
   type = object({
     enabled                  = bool
     namespace                = optional(string, "karpenter")
@@ -49,23 +49,32 @@ variable "karpenter" {
     ocinodeclass = object({
       name = string
       shape_configs = optional(list(object({
-	ocpus                     = number
-	memory_in_gbs             = number
-	baseline_ocpu_utilization = optional(string)
+        ocpus                     = number
+        memory_in_gbs             = number
+        baseline_ocpu_utilization = optional(string)
       })), [])
       image_config = object({
-	image_type        = optional(string, "OKEImage")
-	image_id          = optional(string)
-	os_filter         = optional(string)
-	os_version_filter = optional(string)
+        image_type        = optional(string, "OKEImage")
+        image_id          = optional(string)
+        os_filter         = optional(string)
+        os_version_filter = optional(string)
       })
-      primary_subnet_name          = string
-      pod_subnet_names             = optional(list(string), [])
-      pod_nsg_names                = optional(list(string), [])
+      primary_subnet_name = string
+      primary_vnic_config = optional(object({
+        assign_public_ip       = optional(bool)
+        skip_source_dest_check = optional(bool)
+      }), {})
+      pod_subnet_names = optional(list(string), [])
+      pod_nsg_names    = optional(list(string), [])
+      secondary_vnic_config = optional(object({
+        assign_public_ip       = optional(bool)
+        skip_source_dest_check = optional(bool)
+      }), {})
       secondary_vnic_ip_count      = optional(number)
       use_same_node_and_pod_subnet = optional(bool, false)
     })
-    repro = optional(object({
+    test_workload = optional(object({
+      name          = optional(string, "karpenter-test-workload")
       enabled       = optional(bool, false)
       replicas      = optional(number, 50)
       cpu           = optional(string, "2")
@@ -74,6 +83,16 @@ variable "karpenter" {
       sleep_seconds = optional(number, 3600)
     }), { enabled = false })
   })
+  validation {
+    condition = (
+      !var.karpenter.enabled ||
+      !var.karpenter.oci_vcn_ip_native ||
+      try(var.karpenter.ocinodeclass.secondary_vnic_ip_count, null) == null ||
+      try(var.karpenter.ocinodeclass.use_same_node_and_pod_subnet, false) ||
+      length(try(var.karpenter.ocinodeclass.pod_subnet_names, [])) > 0
+    )
+    error_message = "When OCI VCN-native secondary VNIC pod networking is enabled with separate pod subnets, set karpenter.ocinodeclass.pod_subnet_names or explicitly opt into use_same_node_and_pod_subnet = true."
+  }
   default = {
     enabled                  = false
     chart_version            = "1.1.0"
@@ -95,9 +114,11 @@ variable "karpenter" {
       instance_shapes = ["VM.Standard.E3.Flex"]
     }
     ocinodeclass = {
-      name                = "karpenter-general"
-      image_config        = {}
-      primary_subnet_name = "nodes"
+      name                  = "karpenter-general"
+      image_config          = {}
+      primary_subnet_name   = "nodes"
+      primary_vnic_config   = {}
+      secondary_vnic_config = {}
     }
   }
 }

@@ -75,11 +75,10 @@ module "instances" {
   enable_vnic_lookup_outputs = false
   create_vnic_details        = each.value.create_vnic_details
   display_name               = each.value.display_name
-  ssh_public_keys            = each.value.ssh_public_keys
+  metadata                   = each.value.metadata
   shape                      = each.value.shape
   shape_config               = each.value.shape_config
   source_details             = each.value.source_details
-  cloud_init                 = each.value.cloud_init
   depends_on = [
     module.karpenter_controller_policy,
     module.karpenter_cluster_join_policy,
