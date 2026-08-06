@@ -1,21 +1,14 @@
 # GitOps
 
-This repo uses Argo CD as the default KPO deployment path.
+The `gitops/` tree in this repo now acts mainly as a generated/rendered
+workspace for KPO values and manifests.
 
-- Bastion cloud-init bootstraps Argo CD only.
-- Argo CD then reconciles:
-  - the KPO Helm release
-  - `OCINodeClass`
-  - `NodePool`
-  - optional test workload
+- The default install path is automated bastion bootstrap with Helm and
+  `kubectl`.
+- Argo CD can still consume these files if you want, but it is no longer
+  required for the basic standalone test flow.
 
-For this public repository, Argo CD should use:
-
-- `https://github.com/dev-null-loop/private-oke-karpenter.git`
-
-For private repositories, Argo CD still needs repository credentials.
-Provide them either by:
-
-- setting `karpenter.gitops.repository_secret` so bastion bootstrap applies the
-  secret automatically
-- or applying an equivalent Argo CD repository secret separately
+The OKE bootstrap `user_data` patch is committed directly in
+`ocinodeclass.yaml` so Karpenter-launched workers keep the fixed bootstrap path.
+The human-readable source for that payload lives in
+`gitops/clusters/private-oke-karpenter/karpenter/oke-bootstrap-user-data.sh`.

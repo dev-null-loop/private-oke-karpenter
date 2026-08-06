@@ -26,4 +26,4 @@ for n in $(kubectl get nativepodnetwork -A --no-headers 2>/dev/null | awk '$4=="
   echo "--- $ns_name/$obj_name ---"
   kubectl -n "$ns_name" describe nativepodnetwork "$obj_name" || true
   echo
- done
+done

@@ -10,7 +10,6 @@ variable "karpenter" {
     vcn_compartment     = string
     oci_vcn_ip_native   = bool
     ip_families         = optional(list(string), ["IPv4"])
-    install_via_bastion = optional(bool, true)
     bastion_instance    = optional(string, "bastion")
     bastion_kubeconfig_iam = optional(object({
       enabled               = optional(bool, true)
@@ -19,17 +18,6 @@ variable "karpenter" {
       policy                = optional(string, "kubeconfig_bastion_cluster")
       matching_rule         = optional(string)
       manage_cluster_family = optional(bool, true)
-    }), {})
-    gitops = optional(object({
-      repo_url             = optional(string, "https://github.com/dev-null-loop/private-oke-karpenter.git")
-      revision             = optional(string, "main")
-      argocd_namespace     = optional(string, "argocd")
-      argocd_release_name  = optional(string, "argocd")
-      argocd_chart_version = optional(string, "8.4.0")
-      root_app             = optional(string, "root")
-      chart_app            = optional(string, "karpenter-chart")
-      manifests_app        = optional(string, "karpenter-manifests")
-      repository_secret    = optional(string, "")
     }), {})
     node_pool = string
     iam = optional(object({
@@ -58,6 +46,7 @@ variable "karpenter" {
     })
     ocinodeclass = object({
       name = string
+      ssh_authorized_keys = optional(list(string), [])
       shape_configs = optional(list(object({
         ocpus                     = number
         memory_in_gbs             = number
@@ -113,7 +102,6 @@ variable "karpenter" {
     bastion_kubeconfig_iam = {
       enabled = true
     }
-    gitops    = {}
     node_pool = "n"
     iam = {
       enabled = true
@@ -126,6 +114,7 @@ variable "karpenter" {
     }
     ocinodeclass = {
       name                  = "karpenter-general"
+      ssh_authorized_keys   = []
       image_config          = {}
       primary_subnet        = "nodes"
       primary_vnic_config   = {}

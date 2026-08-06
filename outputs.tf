@@ -1,6 +1,7 @@
 output "sshuttle" {
   value = [for k, v in var.instances :
     "sshuttle -x ${module.instances[k].public_ip} --dns -NHr opc@${module.instances[k].public_ip} ${module.vcns[var.subnets[v.create_vnic_details.subnet].vcn].cidr_blocks[0]}"
+    if try(module.instances[k].public_ip, null) != null
   ]
 }
 

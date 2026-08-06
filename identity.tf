@@ -1,7 +1,7 @@
 locals {
   karpenter_iam_enabled          = local.karpenter_enabled && var.karpenter.iam.enabled
-  bastion_kubeconfig_iam_enabled = local.karpenter_enabled && var.karpenter.install_via_bastion && var.karpenter.bastion_kubeconfig_iam.enabled
-  karpenter_service_account      = coalesce(var.karpenter.iam.service_account, var.karpenter.gitops.chart_app, var.karpenter.release_name)
+  bastion_kubeconfig_iam_enabled = local.karpenter_enabled && var.karpenter.bastion_kubeconfig_iam.enabled
+  karpenter_service_account      = coalesce(var.karpenter.iam.service_account, var.karpenter.release_name)
 
   karpenter_policy_compartment = coalesce(
     var.karpenter.iam.policy_compartment,

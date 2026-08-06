@@ -1,60 +1,10 @@
 karpenter = {
-  enabled                  = true
-  chart_version            = "1.1.0"
-  cluster                  = "c"
-  cluster_compartment      = "dev"
-  vcn_compartment          = "dev"
-  oci_vcn_ip_native        = true
-  bastion_instance         = "bastion"
-  node_pool                = "n"
+  enabled             = true
+  cluster             = "c"
+  cluster_compartment = "dev"
+  bastion_instance    = "bastion"
 
   bastion_kubeconfig_iam = {
     enabled = false
-  }
-
-  nodepool = {
-    name                     = "karpenter-general"
-    cpu_limit                = 128
-    memory_limit             = "512Gi"
-    expire_after             = "Never"
-    termination_grace_period = "120m"
-    capacity_types           = ["on-demand"]
-    instance_shapes          = ["VM.Standard.E5.Flex"]
-    consolidation_policy     = "WhenEmpty"
-    consolidate_after        = "60m"
-    budget_nodes             = "5%"
-  }
-
-  ocinodeclass = {
-    name = "karpenter-general"
-    shape_configs = [
-      { ocpus = 8, memory_in_gbs = 32 },
-      { ocpus = 16, memory_in_gbs = 64 },
-    ]
-    image_config = {
-      image_type        = "OKEImage"
-      os_filter         = "Oracle Linux"
-      os_version_filter = "8"
-    }
-    primary_subnet      = "nodes"
-    primary_vnic_config = {
-      assign_public_ip = true
-    }
-    pod_subnets     = ["kpo_pods"]
-    secondary_vnic_config = {
-      skip_source_dest_check = true
-    }
-    secondary_vnic_ip_count      = 32
-    use_same_node_and_pod_subnet = false
-  }
-
-  test_workload = {
-    name          = "karpenter-test-workload"
-    enabled       = false
-    replicas      = 50
-    cpu           = "2"
-    memory        = "4Gi"
-    image         = "busybox:1.36"
-    sleep_seconds = 3600
   }
 }

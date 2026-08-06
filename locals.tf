@@ -1,4 +1,6 @@
 locals {
+  karpenter_enabled = var.karpenter.enabled
+
   network_entity_ids = merge(
     { for k, v in module.internet_gateways : "ig_${k}" => v.id },
     { for k, v in module.nat_gateways : "ng_${k}" => v.id },
@@ -45,22 +47,15 @@ locals {
       concat(
         [for part in v.cloud_init : part.vars != null ? part.vars : {}],
         [{
-        kubeconfig_content       = contains(keys(var.clusters), v.managed_cluster) ? module.kubeconfigs[v.managed_cluster].kubeconfig_instance_principal : ""
-        chart_version            = local.karpenter_enabled ? var.karpenter.chart_version : ""
-        namespace                = local.karpenter_enabled ? var.karpenter.namespace : "karpenter"
-        release_name             = local.karpenter_enabled ? var.karpenter.release_name : "karpenter"
-        values_content           = local.karpenter_enabled && module.karpenter.values_content != null ? module.karpenter.values_content : ""
-        ocinodeclass_content     = local.karpenter_enabled && module.karpenter.ocinodeclass_content != null ? module.karpenter.ocinodeclass_content : ""
-        nodepool_content         = local.karpenter_enabled && module.karpenter.nodepool_content != null ? module.karpenter.nodepool_content : ""
-        test_workload_content    = local.karpenter_enabled && module.karpenter.test_workload_content != null ? module.karpenter.test_workload_content : ""
-        argocd_namespace         = local.karpenter_enabled ? var.karpenter.gitops.argocd_namespace : "argocd"
-        argocd_release_name      = local.karpenter_enabled ? var.karpenter.gitops.argocd_release_name : "argocd"
-        argocd_chart_version     = local.karpenter_enabled ? var.karpenter.gitops.argocd_chart_version : "8.4.0"
-        gitops_repo_url          = local.karpenter_enabled ? var.karpenter.gitops.repo_url : ""
-        gitops_revision          = local.karpenter_enabled ? var.karpenter.gitops.revision : "main"
-        gitops_root_app          = local.karpenter_enabled ? var.karpenter.gitops.root_app : "root"
-        gitops_repository_secret = local.karpenter_enabled ? var.karpenter.gitops.repository_secret : ""
-      }]
+          kubeconfig_content    = contains(keys(var.clusters), v.managed_cluster) ? module.kubeconfigs[v.managed_cluster].kubeconfig_instance_principal : ""
+          chart_version         = local.karpenter_enabled ? var.karpenter.chart_version : ""
+          namespace             = local.karpenter_enabled ? var.karpenter.namespace : "karpenter"
+          release_name          = local.karpenter_enabled ? var.karpenter.release_name : "karpenter"
+          values_content        = local.karpenter_enabled && module.karpenter.values_content != null ? module.karpenter.values_content : ""
+          ocinodeclass_content  = local.karpenter_enabled && module.karpenter.ocinodeclass_content != null ? module.karpenter.ocinodeclass_content : ""
+          nodepool_content      = local.karpenter_enabled && module.karpenter.nodepool_content != null ? module.karpenter.nodepool_content : ""
+          test_workload_content = local.karpenter_enabled && module.karpenter.test_workload_content != null ? module.karpenter.test_workload_content : ""
+        }]
       )...
     )
   }
