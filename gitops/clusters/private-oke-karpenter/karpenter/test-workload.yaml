@@ -3,7 +3,7 @@
 "metadata":
   "name": "karpenter-test-workload"
 "spec":
-  "replicas": 50
+  "replicas": 20
   "selector":
     "matchLabels":
       "app": "karpenter-test-workload"

@@ -1,6 +1,7 @@
 locals {
   karpenter_iam_enabled          = local.karpenter_enabled && var.karpenter.iam.enabled
   bastion_kubeconfig_iam_enabled = local.karpenter_enabled && var.karpenter.install_via_bastion && var.karpenter.bastion_kubeconfig_iam.enabled
+  karpenter_service_account      = coalesce(var.karpenter.iam.service_account, var.karpenter.gitops.chart_app, var.karpenter.release_name)
 
   karpenter_policy_compartment = coalesce(
     var.karpenter.iam.policy_compartment,
@@ -37,24 +38,24 @@ locals {
         description    = "OCI Karpenter controller workload identity policy"
         statements = concat(
           [
-            "Allow any-user to manage instance-family in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${var.karpenter.iam.service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
-            "Allow any-user to manage volumes in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${var.karpenter.iam.service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
-            "Allow any-user to manage volume-attachments in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${var.karpenter.iam.service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
-            "Allow any-user to manage virtual-network-family in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${var.karpenter.iam.service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
-            "Allow any-user to inspect compartments in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${var.karpenter.iam.service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
+            "Allow any-user to manage instance-family in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
+            "Allow any-user to manage volumes in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
+            "Allow any-user to manage volume-attachments in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
+            "Allow any-user to manage virtual-network-family in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
+            "Allow any-user to inspect compartments in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
             "Allow dynamic-group ${var.karpenter.iam.dynamic_group} to {CLUSTER_JOIN} in compartment ${local.karpenter_policy_compartment}"
           ],
           var.karpenter.iam.enable_capacity_reservation ? [
-            "Allow any-user to use compute-capacity-reservations in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${var.karpenter.iam.service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
+            "Allow any-user to use compute-capacity-reservations in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
           ] : [],
           var.karpenter.iam.enable_compute_cluster ? [
-            "Allow any-user to use compute-clusters in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${var.karpenter.iam.service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
+            "Allow any-user to use compute-clusters in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
           ] : [],
           var.karpenter.iam.enable_cluster_pg ? [
-            "Allow any-user to use cluster-placement-groups in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${var.karpenter.iam.service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
+            "Allow any-user to use cluster-placement-groups in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
           ] : [],
           var.karpenter.iam.enable_defined_tags ? [
-            "Allow any-user to use tag-namespaces in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${var.karpenter.iam.service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
+            "Allow any-user to use tag-namespaces in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
           ] : []
         )
       }

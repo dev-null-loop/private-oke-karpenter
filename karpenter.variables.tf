@@ -1,17 +1,17 @@
 variable "karpenter" {
   description = "OCI Karpenter / KPO install and optional synthetic test workload settings"
   type = object({
-    enabled                  = bool
-    namespace                = optional(string, "karpenter")
-    chart_version            = string
-    release_name             = optional(string, "karpenter")
-    cluster                  = string
-    cluster_compartment      = string
-    vcn_compartment          = string
-    oci_vcn_ip_native        = bool
-    ip_families              = optional(list(string), ["IPv4"])
-    install_via_bastion      = optional(bool, true)
-    bastion_instance         = optional(string, "bastion")
+    enabled             = bool
+    namespace           = optional(string, "karpenter")
+    chart_version       = string
+    release_name        = optional(string, "karpenter")
+    cluster             = string
+    cluster_compartment = string
+    vcn_compartment     = string
+    oci_vcn_ip_native   = bool
+    ip_families         = optional(list(string), ["IPv4"])
+    install_via_bastion = optional(bool, true)
+    bastion_instance    = optional(string, "bastion")
     bastion_kubeconfig_iam = optional(object({
       enabled               = optional(bool, true)
       bastion_compartment   = optional(string)
@@ -36,7 +36,7 @@ variable "karpenter" {
       enabled                     = optional(bool, true)
       policy_compartment          = optional(string)
       node_compartment            = optional(string)
-      service_account             = optional(string, "karpenter")
+      service_account             = optional(string)
       dynamic_group               = optional(string, "kpo_nodes")
       controller_policy           = optional(string, "kpo_controller")
       enable_capacity_reservation = optional(bool, false)
@@ -69,13 +69,13 @@ variable "karpenter" {
         os_filter         = optional(string)
         os_version_filter = optional(string)
       })
-      primary_subnet      = string
+      primary_subnet = string
       primary_vnic_config = optional(object({
         assign_public_ip       = optional(bool)
         skip_source_dest_check = optional(bool)
       }), {})
-      pod_subnets     = optional(list(string), [])
-      pod_nsg_names    = optional(list(string), [])
+      pod_subnets   = optional(list(string), [])
+      pod_nsg_names = optional(list(string), [])
       secondary_vnic_config = optional(object({
         assign_public_ip       = optional(bool)
         skip_source_dest_check = optional(bool)
@@ -104,17 +104,17 @@ variable "karpenter" {
     error_message = "When OCI VCN-native secondary VNIC pod networking is enabled with separate pod subnets, set karpenter.ocinodeclass.pod_subnets or explicitly opt into use_same_node_and_pod_subnet = true."
   }
   default = {
-    enabled                  = false
-    chart_version            = "1.1.0"
-    cluster                  = "c"
-    cluster_compartment      = "dev"
-    vcn_compartment          = "dev"
-    oci_vcn_ip_native        = true
+    enabled             = false
+    chart_version       = "1.3.0"
+    cluster             = "c"
+    cluster_compartment = "dev"
+    vcn_compartment     = "dev"
+    oci_vcn_ip_native   = true
     bastion_kubeconfig_iam = {
       enabled = true
     }
-    gitops = {}
-    node_pool      = "n"
+    gitops    = {}
+    node_pool = "n"
     iam = {
       enabled = true
     }
