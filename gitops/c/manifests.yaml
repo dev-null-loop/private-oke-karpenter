@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/dev-null-loop/private-oke-karpenter.git
     targetRevision: main
-    path: gitops/clusters/private-oke-karpenter/karpenter
+    path: gitops/c/kpo
   destination:
     server: https://kubernetes.default.svc
     namespace: karpenter

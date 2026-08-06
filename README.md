@@ -1,201 +1,185 @@
 # private_oke_karpenter
 
-Private OKE baseline plus OCI Karpenter (KPO) install and validation harness.
+Private OKE baseline plus pure-GitOps OCI Karpenter (KPO) validation stack.
 
-This repo is derived from `private_oke_oidc`, but scoped for:
-- private OKE cluster creation
-- bootstrap node pool creation
-- bastion VM access path
-- automated bastion-side KPO bootstrap with Helm and `kubectl`
-- generated KPO values plus generated `OCINodeClass` and `NodePool` manifests
-- Fortinet-style public-worker validation with OCI VCN-native pod networking
-- optional synthetic test workload generation
+## Ownership Model
 
-## Flow
+- Terraform owns OCI and OKE infrastructure:
+  - VCN, subnets, gateways, security lists
+  - OKE cluster
+  - bootstrap managed node pool
+  - bastion
+  - IAM for KPO and bastion kubeconfig access
+- GitOps owns KPO runtime state:
+  - Argo CD applications
+  - KPO chart values
+  - `OCINodeClass`
+  - `NodePool`
+  - optional demand workloads if you add them
 
-1. `terraform apply` builds the private OKE cluster, bootstrap node pool, bastion VM, and kubeconfig.
-2. Terraform renders KPO values, `OCINodeClass`, `NodePool`, and optional test workload content.
-3. Bastion cloud-init installs `kubectl`, OCI CLI, and Helm.
-4. Bastion cloud-init installs the KPO Helm chart and applies the rendered manifests automatically.
+Terraform no longer renders or applies KPO manifests.
 
+## Actual Deploy Model
 
-## Prerequisites
+This repo is not a one-step blank-environment deployment.
 
-Before installing OCI Karpenter in this stack, make sure the following are true:
+Because you do not know the real environment values in advance, deployment is now a 2-step process:
 
-- OKE cluster version is `>= v1.31`.
-- The cluster already has bootstrap worker capacity so the KPO controller can run before Karpenter provisions new nodes.
-- If the cluster uses OCI VCN-native pod networking, set `ociVcnIpNative: true` in the KPO values and use a compatible OciIpNativeCNI add-on version.
-- The bastion host or another machine with private network reachability can access the private OKE API endpoint.
-- Helm is available on the bastion for operator use.
-- KPO IAM policies are created before Argo sync installs the KPO chart.
-- For this public repository, Argo CD should use the HTTPS repo URL.
-- For private repositories, Argo CD must already have repository credentials before sync can succeed.
+1. `terraform apply`
+2. update committed GitOps environment files, then apply/sync GitOps
 
-## Required IAM Policies
+The environment-specific files are:
 
-KPO runs in-cluster and uses OCI workload identity. The KPO controller service account must be allowed to manage OCI resources needed for node provisioning.
+- `gitops/c/kpo/values.yaml`
+- `gitops/c/kpo/ocinodeclass.yaml`
 
-Typical policy shape:
+## Exact Deploy Steps
 
-```text
-Allow any-user to <verb> <resource> in <location> where all {
-  request.principal.type = 'workload',
-  request.principal.namespace = '<karpenter-namespace>',
-  request.principal.service_account = '<karpenter-service-account>',
-  request.principal.cluster_id = '<oke-cluster-ocid>'
-}
-```
-
-For this stack, the default namespace/service account are typically:
-- namespace: `karpenter`
-- service account: `karpenter`
-
-Minimum controller policies:
-
-```text
-Allow any-user to manage instance-family in compartment <compartment-name> where all { ... }
-Allow any-user to manage volumes in compartment <compartment-name> where all { ... }
-Allow any-user to manage volume-attachments in compartment <compartment-name> where all { ... }
-Allow any-user to manage virtual-network-family in compartment <compartment-name> where all { ... }
-Allow any-user to inspect compartments in compartment <compartment-name> where all { ... }
-```
-
-Optional policies if you enable the related features in `OCINodeClass`:
-
-```text
-Allow any-user to use compute-capacity-reservations in compartment <compartment-name> where all { ... }
-Allow any-user to use compute-clusters in compartment <compartment-name> where all { ... }
-Allow any-user to use cluster-placement-groups in compartment <compartment-name> where all { ... }
-Allow any-user to use tag-namespaces in compartment <compartment-name> where all { ... }
-```
-
-## Node Registration Policy
-
-Instances launched by KPO also need permission to join the OKE cluster.
-Create a dynamic group that matches the compartment(s) where KPO will launch worker nodes, then allow `CLUSTER_JOIN`.
-
-Example dynamic group rule:
-
-```text
-ALL {instance.compartment.id = '<node-compartment-ocid>'}
-```
-
-Example policy:
-
-```text
-Allow dynamic-group <domain-name>/<dynamic-group-name> to {CLUSTER_JOIN} in compartment <compartment-name>
-```
-
-## Networking Notes
-
-- This repo is designed for private OKE clusters.
-- For the Fortinet investigation path, use a public `nodes` subnet for the worker primary VNIC and keep KPO pod IP allocation on a dedicated private `kpo_pods` subnet.
-- `primary_vnic_config.assign_public_ip = true` controls whether Karpenter-launched workers request a public IP on the primary VNIC.
-- `secondary_vnic_config` controls only the additional VNICs that back OCI VCN-native pod IP allocation. It does not by itself prove that normal pod egress will SNAT behind the worker public IP.
-- The optional synthetic workload under `karpenter.test_workload` is just a convenient pending-workload trigger. It is not specific to Fortinet unless you explicitly enable it for that purpose.
-- For long-term KPO operation with secondary VNICs, separate node and pod subnets are usually safer than reusing the same subnet, because IP fragmentation can cause NativePodNetwork failures even when total free IP count looks high.
-
-## Bootstrap Model
-
-This repo uses a self-contained automated bootstrap split:
-
-- Terraform owns OCI, OKE, IAM, and rendered KPO content
-- the bastion instance prepares access tooling and installs KPO automatically
-- Argo CD is not required for the basic KPO test path
-
-## Cloud-Init Limitation
-
-OCI instance `metadata.user_data` should be treated as day-0 bootstrap input.
-In this stack, changing bastion cloud-init content can force bastion replacement.
-
-Tradeoff:
-
-- this is simpler than Argo CD for a standalone test stack
-- changing bastion bootstrap cloud-init can still force bastion replacement
-
-Practical split:
-
-- day-0 via bastion cloud-init:
+1. Run `terraform apply`
+- this creates:
+  - OKE cluster
+  - bootstrap managed node pool
+  - bastion
+  - IAM for KPO
+- bastion cloud-init installs:
   - `kubectl`
   - OCI CLI
   - Helm
-  - bastion kubeconfig placement
-  - KPO Helm install
-  - `OCINodeClass` apply
-  - `NodePool` apply
-  - optional test workload apply
+  - Git
+  - Argo CD
 
-## OKE Bootstrap Patch
+2. Discover the real environment values from the created stack
+- at minimum:
+  - API server private endpoint host
+  - subnet OCIDs for:
+    - primary node subnet
+    - pod secondary subnet
+  - any changed compartment OCIDs if applicable
 
-Karpenter-launched OKE workers in this repo embed a committed custom
-`OCINodeClass.spec.metadata.user_data` payload in `gitops/.../ocinodeclass.yaml`.
-The readable source script is
-`gitops/clusters/private-oke-karpenter/karpenter/oke-bootstrap-user-data.sh`.
+3. Update the committed GitOps files
+- patch:
+  - `gitops/c/kpo/values.yaml`
+  - `gitops/c/kpo/ocinodeclass.yaml`
 
-Why:
+Important:
+- `settings.apiserverEndpoint` must be host-only, not `host:port`
+- for example: `10.0.0.8`, not `10.0.0.8:6443`
 
-- OKE bootstrap expects host-only `apiserver_host` metadata and then appends its
-  own worker bootstrap port
-- the custom `user_data` path preserves Oracle bootstrap while exporting the
-  metadata values in the form OKE expects
-- without this patch, Karpenter nodes can launch successfully in OCI but fail
-  before stable cluster registration
+4. Apply the root GitOps app manifests
+- for example from bastion:
 
-## Debugging Notes
+```bash
+kubectl apply -k /home/opc/private-oke-karpenter/gitops/c
+```
 
-Proven failure modes seen in this repo on August 6, 2026:
+5. Let Argo CD reconcile
+- `chart.yaml`
+- `manifests.yaml`
 
-- If the shim renders `"$$(fetch_md ...)"` instead of `"$(fetch_md ...)"`,
-  `cloud-final` fails before OKE bootstrap with broken values such as
-  `3606(fetch_md apiserver_host)` and `base64: invalid input`.
-- `APISERVER_ENDPOINT` must be host-only. If the shim passes `10.0.0.8:6443`,
-  OKE bootstrap constructs `https://10.0.0.8:6443:12250/workerNodeBootstrap`
-  and retries forever with `lookup 10.0.0.8:6443: no such host`.
-- The bastion bootstrap is one-shot cloud-init. `terraform apply` updates the
-  rendered KPO manifests on disk, but it does not automatically re-run
-  `kubectl apply` on an already-created bastion.
-- Because of that limitation, after changing `gitops/.../ocinodeclass.yaml`
-  or other rendered KPO manifests, apply them manually to the cluster and
-  recycle the affected `NodeClaim`s.
-- After both fixes were applied and fresh `NodeClaim`s were launched, the new
-  Karpenter nodes `10.0.10.61` and `10.0.10.206` registered successfully and
-  reached `Ready` on August 6, 2026.
-- The Karpenter workers that registered successfully were running kernel
-  `5.15.0-322.203.3.4.el8uek.x86_64`.
-- A few `NodeAffinity` failed test-workload pods can remain from earlier bad
-  bootstrap cycles. Those are stale failed replicas, not proof that the live
-  replacement nodes are still broken.
+After that:
+- Argo deploys the KPO Helm chart
+- Argo applies the committed `OCINodeClass`
+- Argo applies the committed `NodePool`
 
-## Fortinet Validation Mode
+## GitOps Layout
 
-The example files are biased toward the Fortinet/KPO validation path:
+- `gitops/c/chart.yaml`
+  - Argo application for the KPO Helm chart
+- `gitops/c/manifests.yaml`
+  - Argo application for committed `OCINodeClass` and `NodePool`
+- `gitops/c/kpo/values.yaml`
+  - committed Helm values
+- `gitops/c/kpo/ocinodeclass.yaml`
+  - committed KPO node class
+- `gitops/c/kpo/nodepool.yaml`
+  - committed Karpenter node pool
+- `gitops/c/kpo/pre-bootstrap-init.sh`
+  - readable source for the committed `preBootstrapInitScript`
 
-- bootstrap node pool stays in Terraform
-- Karpenter workers use the public `nodes` subnet as their primary subnet
-- KPO pod IP allocation uses a separate private `kpo_pods` subnet
-- the synthetic test workload is disabled by default
+## Bastion Bootstrap
 
-This keeps the repo aligned with the actual question being investigated:
+- `userdata/helm.yaml.tftpl`
+  - installs `kubectl`, OCI CLI, Helm, Git, and kubeconfig
+- `userdata/argocd-bootstrap.yaml.tftpl`
+  - installs Argo CD
+  - clones this repo on the bastion
+  - does not auto-apply the Karpenter GitOps apps
 
-- can Karpenter-launched public workers plus OCI VCN-native pod networking produce the Fortinet-requested egress behavior
+This is still day-0 cloud-init on the bastion. Changing bastion cloud-init can still force bastion replacement.
 
-The answer still depends on live runtime validation, but these defaults keep the repo aligned with the Fortinet path instead of an older bug-reproduction path.
+## KPO Bootstrap Hook
+
+Karpenter-launched workers use:
+
+- `OCINodeClass.spec.preBootstrapInitScript`
+
+not full `metadata.user_data`.
+
+The readable source lives in:
+
+- `gitops/c/kpo/pre-bootstrap-init.sh`
+
+The committed `OCINodeClass` contains the base64 payload because that is how KPO expects the field.
+
+## Important Constraint
+
+This repo is pure GitOps for KPO runtime state, but the committed GitOps manifests are environment-specific.
+
+That means if you recreate infra with different:
+
+- subnet OCIDs
+- compartment OCIDs
+- API endpoint
+- image assumptions
+
+you must update the committed GitOps files to match the new environment.
+
+## Destroy Flow
+
+Do not run raw `terraform destroy` first.
+
+Use this order:
+
+1. Remove demand workloads from Git, if any.
+2. Remove or disable `NodePool` / `OCINodeClass` in Git.
+3. Let Argo CD sync the removal.
+4. Wait until:
+   - `kubectl get nodeclaims -A` is empty
+   - Karpenter-created OCI instances are gone
+5. Run `terraform destroy`
+
+Reason:
+
+- Terraform does not own Karpenter-created OCI instances.
+- KPO must be allowed to drain and delete its own `NodeClaims` first.
+
+## Current Validation Notes
+
+On Thursday, August 6, 2026, this repo was used as a healthy control case for:
+
+- `BM.Standard3.64`
+- OCI VCN-native pod networking
+- primary worker VNIC on `nodes`
+- secondary pod VNIC on `kpo_pods`
+
+The stack successfully:
+
+- launched BM nodes through KPO
+- recycled them through Karpenter
+- re-registered replacement BM nodes
+- completed `ListVnicAttachments` and `GetVnic` checks
+
+That proved shape alone did not reproduce the Fortinet incident in this stack.
 
 ## Files
 
-- `karpenter.tf`: KPO render wiring and user-facing outputs
-- `karpenter.variables.tf`: operator and test-workload settings
-- `karpenter.auto.tfvars`: KPO settings
-- `addons/karpenter/*`: KPO content generation logic and debug script
-- `gitops/*`: generated KPO values/manifests written into the repo workspace
-- `gitops/clusters/private-oke-karpenter/karpenter/oke-bootstrap-user-data.sh`: readable source for the committed `user_data` payload
-- `userdata/helm.yaml.tftpl`: bastion cloud-init that prepares kubeconfig and tools
-- `userdata/kpo-bootstrap.yaml.tftpl`: bastion cloud-init that installs KPO and applies rendered manifests
-
-## Important notes
-
-- Keep one bootstrap node pool in Terraform. KPO should not bootstrap itself from zero.
-- If you use OCI VCN-native pod networking, set `ociVcnIpNative=true` in the KPO values.
-- For separate OCI VCN-native pod subnets, explicit secondary-VNIC configuration and pod-subnet control are the important knobs.
-- Argo CD is optional. The default path is bastion bootstrap with Helm and `kubectl`.
+- `core.auto.tfvars`
+  - bastion cloud-init references
+- `karpenter.auto.tfvars`
+  - KPO infra-prereq and IAM toggles only
+- `karpenter.variables.tf`
+  - Terraform-side KPO prereq schema
+- `identity.tf`
+  - KPO and bastion IAM
+- `gitops/*`
+  - single source of truth for KPO runtime state

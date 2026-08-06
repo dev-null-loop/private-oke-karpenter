@@ -1,14 +1,33 @@
 # GitOps
 
-The `gitops/` tree in this repo now acts mainly as a generated/rendered
-workspace for KPO values and manifests.
+`gitops/` is the runtime source of truth for KPO in this repo.
 
-- The default install path is automated bastion bootstrap with Helm and
-  `kubectl`.
-- Argo CD can still consume these files if you want, but it is no longer
-  required for the basic standalone test flow.
+Terraform does not render or apply KPO manifests anymore.
 
-The OKE bootstrap `user_data` patch is committed directly in
-`ocinodeclass.yaml` so Karpenter-launched workers keep the fixed bootstrap path.
-The human-readable source for that payload lives in
-`gitops/clusters/private-oke-karpenter/karpenter/oke-bootstrap-user-data.sh`.
+## What Lives Here
+
+- Argo CD application manifests
+- committed KPO Helm values
+- committed `OCINodeClass`
+- committed `NodePool`
+- readable bootstrap hook source
+
+## Bootstrap
+
+The bastion installs Argo CD. After you patch environment-specific values, apply:
+
+- `gitops/c`
+
+After that, Argo CD owns reconciliation of the KPO chart and manifests from Git.
+
+## Important Constraint
+
+These manifests are committed and environment-specific.
+
+If infra changes and you get new:
+
+- subnet OCIDs
+- compartment OCIDs
+- API endpoint values
+
+you must update the GitOps files accordingly.

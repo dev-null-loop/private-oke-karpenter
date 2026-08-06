@@ -1,0 +1,6 @@
+#cloud-config
+runcmd:
+  - su - opc -c 'kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -'
+  - su - opc -c 'kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml'
+  - su - opc -c 'kubectl wait --namespace argocd --for=condition=Ready pod --all --timeout=20m'
+  - su - opc -c 'rm -rf /home/opc/private-oke-karpenter && git clone https://github.com/dev-null-loop/private-oke-karpenter.git /home/opc/private-oke-karpenter || true'

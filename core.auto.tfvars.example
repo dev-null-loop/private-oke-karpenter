@@ -506,8 +506,8 @@ instances = {
 	filename     = "userdata/helm.yaml.tftpl"
       },
       {
-	content_type = "text/cloud-config"
-	filename     = "userdata/kpo-bootstrap.yaml.tftpl"
+        content_type = "text/cloud-config"
+	filename     = "userdata/argocd-bootstrap.yaml.tftpl"
       }
     ]
   }

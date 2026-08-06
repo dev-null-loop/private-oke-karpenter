@@ -47,14 +47,7 @@ locals {
       concat(
         [for part in v.cloud_init : part.vars != null ? part.vars : {}],
         [{
-          kubeconfig_content    = contains(keys(var.clusters), v.managed_cluster) ? module.kubeconfigs[v.managed_cluster].kubeconfig_instance_principal : ""
-          chart_version         = local.karpenter_enabled ? var.karpenter.chart_version : ""
-          namespace             = local.karpenter_enabled ? var.karpenter.namespace : "karpenter"
-          release_name          = local.karpenter_enabled ? var.karpenter.release_name : "karpenter"
-          values_content        = local.karpenter_enabled && module.karpenter.values_content != null ? module.karpenter.values_content : ""
-          ocinodeclass_content  = local.karpenter_enabled && module.karpenter.ocinodeclass_content != null ? module.karpenter.ocinodeclass_content : ""
-          nodepool_content      = local.karpenter_enabled && module.karpenter.nodepool_content != null ? module.karpenter.nodepool_content : ""
-          test_workload_content = local.karpenter_enabled && module.karpenter.test_workload_content != null ? module.karpenter.test_workload_content : ""
+          kubeconfig_content = contains(keys(var.clusters), v.managed_cluster) ? module.kubeconfigs[v.managed_cluster].kubeconfig_instance_principal : ""
         }]
       )...
     )

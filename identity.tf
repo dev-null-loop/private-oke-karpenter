@@ -1,7 +1,7 @@
 locals {
   karpenter_iam_enabled          = local.karpenter_enabled && var.karpenter.iam.enabled
   bastion_kubeconfig_iam_enabled = local.karpenter_enabled && var.karpenter.bastion_kubeconfig_iam.enabled
-  karpenter_service_account      = coalesce(var.karpenter.iam.service_account, var.karpenter.release_name)
+  karpenter_service_account      = coalesce(var.karpenter.iam.service_account, "karpenter")
 
   karpenter_policy_compartment = coalesce(
     var.karpenter.iam.policy_compartment,

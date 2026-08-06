@@ -3,4 +3,3 @@ kind: Kustomization
 resources:
   - ocinodeclass.yaml
   - nodepool.yaml
-  - test-workload.yaml
