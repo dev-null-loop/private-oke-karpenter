@@ -1,0 +1,28 @@
+"apiVersion": "argoproj.io/v1alpha1"
+"kind": "Application"
+"metadata":
+  "annotations":
+    "argocd.argoproj.io/sync-wave": "0"
+  "name": "karpenter-chart"
+  "namespace": "argocd"
+"spec":
+  "destination":
+    "namespace": "karpenter"
+    "server": "https://kubernetes.default.svc"
+  "project": "default"
+  "sources":
+  - "chart": "karpenter"
+    "helm":
+      "valueFiles":
+      - "$values/gitops/clusters/private-oke-karpenter/karpenter/values.yaml"
+    "repoURL": "https://oracle.github.io/karpenter-provider-oci/charts"
+    "targetRevision": "1.1.0"
+  - "ref": "values"
+    "repoURL": "https://github.com/dev-null-loop/private-oke-karpenter.git"
+    "targetRevision": "main"
+  "syncPolicy":
+    "automated":
+      "prune": true
+      "selfHeal": true
+    "syncOptions":
+    - "CreateNamespace=true"

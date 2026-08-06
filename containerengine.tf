@@ -20,8 +20,10 @@ module "node_pools" {
   node_source_details              = each.value.node_source_details
   image_id                         = each.value.image_id
   cloud_init                       = each.value.cloud_init
+  node_metadata                    = each.value.node_metadata
   node_config_details              = each.value.node_config_details
   node_eviction_node_pool_settings = each.value.node_eviction_node_pool_settings
+  node_pool_cycling_details        = each.value.node_pool_cycling_details
   node_shape                       = each.value.node_shape
   node_shape_config                = each.value.node_shape_config
   ssh_public_key                   = each.value.ssh_public_key

@@ -21,7 +21,7 @@ variable "karpenter" {
       manage_cluster_family = optional(bool, true)
     }), {})
     gitops = optional(object({
-      repo_url             = optional(string, "git@github-devnull:dev-null-loop/private-oke-karpenter.git")
+      repo_url             = optional(string, "https://github.com/dev-null-loop/private-oke-karpenter.git")
       revision             = optional(string, "main")
       argocd_namespace     = optional(string, "argocd")
       argocd_release_name  = optional(string, "argocd")

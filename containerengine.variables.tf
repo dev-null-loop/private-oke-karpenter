@@ -65,9 +65,15 @@ variable "node_pools" {
       content_type = optional(string)
       vars         = optional(map(string))
     })), [])
+    node_metadata = optional(map(string))
     node_eviction_node_pool_settings = optional(object({
       eviction_grace_duration              = optional(string)
       is_force_delete_after_grace_duration = optional(bool)
+    }))
+    node_pool_cycling_details = optional(object({
+      is_node_cycling_enabled = optional(bool)
+      maximum_surge           = optional(number)
+      maximum_unavailable     = optional(number)
     }))
   }))
   default = {}

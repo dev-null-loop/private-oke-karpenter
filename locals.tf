@@ -42,34 +42,37 @@ locals {
 
   instance_template_vars = {
     for k, v in var.instances : k => merge(
-      length(v.cloud_init) == 0 || v.cloud_init[0].vars == null ? {} : v.cloud_init[0].vars,
-      {
-        kubeconfig_content    = contains(keys(var.clusters), v.managed_cluster) ? module.kubeconfigs[v.managed_cluster].kubeconfig_instance_principal : ""
-        chart_version         = local.karpenter_enabled ? var.karpenter.chart_version : ""
-        namespace             = local.karpenter_enabled ? var.karpenter.namespace : "karpenter"
-        release_name          = local.karpenter_enabled ? var.karpenter.release_name : "karpenter"
-        values_content        = local.karpenter_enabled && module.karpenter.values_content != null ? module.karpenter.values_content : ""
-        ocinodeclass_content  = local.karpenter_enabled && module.karpenter.ocinodeclass_content != null ? module.karpenter.ocinodeclass_content : ""
-        nodepool_content      = local.karpenter_enabled && module.karpenter.nodepool_content != null ? module.karpenter.nodepool_content : ""
-        test_workload_content = local.karpenter_enabled && module.karpenter.test_workload_content != null ? module.karpenter.test_workload_content : ""
-        argocd_namespace      = local.karpenter_enabled ? var.karpenter.gitops.argocd_namespace : "argocd"
-        argocd_release_name   = local.karpenter_enabled ? var.karpenter.gitops.argocd_release_name : "argocd"
-        argocd_chart_version  = local.karpenter_enabled ? var.karpenter.gitops.argocd_chart_version : "8.4.0"
-        gitops_repo_url       = local.karpenter_enabled ? var.karpenter.gitops.repo_url : ""
-        gitops_revision       = local.karpenter_enabled ? var.karpenter.gitops.revision : "main"
-        gitops_root_app       = local.karpenter_enabled ? var.karpenter.gitops.root_app : "root"
+      concat(
+        [for part in v.cloud_init : part.vars != null ? part.vars : {}],
+        [{
+        kubeconfig_content       = contains(keys(var.clusters), v.managed_cluster) ? module.kubeconfigs[v.managed_cluster].kubeconfig_instance_principal : ""
+        chart_version            = local.karpenter_enabled ? var.karpenter.chart_version : ""
+        namespace                = local.karpenter_enabled ? var.karpenter.namespace : "karpenter"
+        release_name             = local.karpenter_enabled ? var.karpenter.release_name : "karpenter"
+        values_content           = local.karpenter_enabled && module.karpenter.values_content != null ? module.karpenter.values_content : ""
+        ocinodeclass_content     = local.karpenter_enabled && module.karpenter.ocinodeclass_content != null ? module.karpenter.ocinodeclass_content : ""
+        nodepool_content         = local.karpenter_enabled && module.karpenter.nodepool_content != null ? module.karpenter.nodepool_content : ""
+        test_workload_content    = local.karpenter_enabled && module.karpenter.test_workload_content != null ? module.karpenter.test_workload_content : ""
+        argocd_namespace         = local.karpenter_enabled ? var.karpenter.gitops.argocd_namespace : "argocd"
+        argocd_release_name      = local.karpenter_enabled ? var.karpenter.gitops.argocd_release_name : "argocd"
+        argocd_chart_version     = local.karpenter_enabled ? var.karpenter.gitops.argocd_chart_version : "8.4.0"
+        gitops_repo_url          = local.karpenter_enabled ? var.karpenter.gitops.repo_url : ""
+        gitops_revision          = local.karpenter_enabled ? var.karpenter.gitops.revision : "main"
+        gitops_root_app          = local.karpenter_enabled ? var.karpenter.gitops.root_app : "root"
         gitops_repository_secret = local.karpenter_enabled ? var.karpenter.gitops.repository_secret : ""
-      }
+      }]
+      )...
     )
+  }
+
+  instance_cloud_init_parts = {
+    for k, v in var.instances : k => v.cloud_init
+    if length(v.cloud_init) > 0
   }
 
   instance_cloud_init_content = {
     for k, v in var.instances : k =>
-    length(v.cloud_init) == 0 ? null : (
-      v.cloud_init[0].content != null ?
-      templatestring(v.cloud_init[0].content, local.instance_template_vars[k]) :
-      templatefile("${path.root}/${v.cloud_init[0].filename}", local.instance_template_vars[k])
-    )
+    length(v.cloud_init) == 0 ? null : data.cloudinit_config.instances[k].rendered
   }
 
   instances = {
@@ -123,5 +126,27 @@ locals {
         })
       })
     })
+  }
+}
+
+data "cloudinit_config" "instances" {
+  for_each      = local.instance_cloud_init_parts
+  gzip          = false
+  base64_encode = false
+
+  dynamic "part" {
+    for_each = each.value
+    iterator = part
+
+    content {
+      content_type = coalesce(part.value.content_type, "text/x-shellscript")
+      filename     = part.value.filename != null ? basename(part.value.filename) : null
+      content = (
+        part.value.filename != null ?
+        templatefile("${path.root}/${part.value.filename}", local.instance_template_vars[each.key]) :
+        templatestring(part.value.content, local.instance_template_vars[each.key])
+      )
+      merge_type = "list(append)+dict(no_replace,recurse_list)+str(append)"
+    }
   }
 }

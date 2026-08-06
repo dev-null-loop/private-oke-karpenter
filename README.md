@@ -30,6 +30,7 @@ Before installing OCI Karpenter in this stack, make sure the following are true:
 - The bastion host or another machine with private network reachability can access the private OKE API endpoint.
 - Helm is available on the bastion (the provided bastion bootstrap path installs it).
 - KPO IAM policies are created before Argo sync installs the KPO chart.
+- For this public repository, Argo CD should use the HTTPS repo URL.
 - For private repositories, Argo CD must have repository credentials before sync can succeed.
 
 ## Required IAM Policies
@@ -110,9 +111,40 @@ Why:
 - a single reconciliation model after bootstrap
 - cleaner separation between bootstrap and ongoing cluster state
 - a clearer ownership boundary:
-  - Terraform: cloud resources and IAM
-  - bastion bootstrap: Argo CD install and root application
-  - Argo CD: KPO chart and manifests
+- Terraform: cloud resources and IAM
+- bastion bootstrap: Argo CD install and root application
+- Argo CD: KPO chart and manifests
+
+## Cloud-Init Limitation
+
+OCI instance `metadata.user_data` should be treated as day-0 bootstrap input.
+In this stack, changing bastion cloud-init content can force bastion replacement.
+
+That matters because GitOps bootstrap content changes more often than the bastion
+itself. If Argo CD install logic, root application content, or related bootstrap
+fragments are embedded directly in bastion `user_data`, ordinary GitOps changes
+can turn into instance recreation pressure.
+
+Recommended workaround:
+
+- keep bastion `user_data` minimal and stable
+- use cloud-init only for base tools and initial kubeconfig placement
+- move mutable Argo/Karpenter bootstrap steps out of `user_data`
+- perform day-1 changes through a post-provision bastion step, OCI instance
+  agent command execution, or a manual/operator bootstrap command
+
+Practical split:
+
+- day-0 via cloud-init:
+  - `kubectl`
+  - OCI CLI
+  - Helm
+  - bastion kubeconfig placement
+- day-1 outside cloud-init:
+  - Argo CD install/update
+  - repository secret apply
+  - root application apply/update
+  - Karpenter sync/reconciliation changes
 
 ## Fortinet Validation Mode
 

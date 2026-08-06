@@ -9,6 +9,10 @@ This repo uses Argo CD as the default KPO deployment path.
   - `NodePool`
   - optional test workload
 
+For this public repository, Argo CD should use:
+
+- `https://github.com/dev-null-loop/private-oke-karpenter.git`
+
 For private repositories, Argo CD still needs repository credentials.
 Provide them either by:
 

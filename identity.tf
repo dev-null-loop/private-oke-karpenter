@@ -61,15 +61,14 @@ locals {
     } : {},
     local.bastion_kubeconfig_iam_enabled ? {
       bastion_kubeconfig = {
-        compartment_id = var.compartment_ids[local.karpenter_policy_compartment]
+        compartment_id = var.tenancy_ocid
         name           = var.karpenter.bastion_kubeconfig_iam.policy
         description    = "Policy for bastion instance-principal kubeconfig access"
         statements = [
           format(
-            "Allow dynamic-group %s to %s in compartment %s",
+            "Allow dynamic-group %s to %s in tenancy",
             var.karpenter.bastion_kubeconfig_iam.dynamic_group,
-            var.karpenter.bastion_kubeconfig_iam.manage_cluster_family ? "manage cluster-family" : "use clusters",
-            var.karpenter.cluster_compartment
+            var.karpenter.bastion_kubeconfig_iam.manage_cluster_family ? "manage cluster-family" : "use clusters"
           )
         ]
       }

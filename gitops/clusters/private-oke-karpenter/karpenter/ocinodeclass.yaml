@@ -1,0 +1,27 @@
+"apiVersion": "oci.oraclecloud.com/v1beta1"
+"kind": "OCINodeClass"
+"metadata":
+  "name": "karpenter-general"
+"spec":
+  "networkConfig":
+    "primaryVnicConfig":
+      "assignPublicIp": true
+      "subnetConfig":
+        "subnetId": "ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaaapstnzvhlh4rwpy7y5lwlxzy2wmjp4vqo74h3jrzw5z5y5vo6wwa"
+    "secondaryVnicConfigs":
+    - "ipCount": 32
+      "skipSourceDestCheck": true
+      "subnetConfig":
+        "subnetId": "ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaaco4vxtyffmxdo4p7blmmtzsw2itp3yf4kziexdgll7ty74dbo52q"
+  "shapeConfigs":
+  - "memoryInGbs": 32
+    "ocpus": 8
+  - "memoryInGbs": 64
+    "ocpus": 16
+  "volumeConfig":
+    "bootVolumeConfig":
+      "imageConfig":
+        "imageFilter":
+          "osFilter": "Oracle Linux"
+          "osVersionFilter": "8"
+        "imageType": "OKEImage"
