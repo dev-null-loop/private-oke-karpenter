@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ns="${namespace}"
+
+echo '== karpenter pods =='
+kubectl -n "$ns" get pods -o wide || true
+
+echo
+echo '== nodeclaims =='
+kubectl get nodeclaims -A || true
+
+echo
+echo '== nodes =='
+kubectl get nodes -o wide || true
+
+echo
+echo '== nativepodnetwork =='
+kubectl get nativepodnetwork -A || true
+
+echo
+echo '== describe failing npn objects =='
+for n in $(kubectl get nativepodnetwork -A --no-headers 2>/dev/null | awk '$4=="BACKOFF" {print $1":"$2}'); do
+  ns_name="$${n%%:*}"
+  obj_name="$${n##*:}"
+  echo "--- $ns_name/$obj_name ---"
+  kubectl -n "$ns_name" describe nativepodnetwork "$obj_name" || true
+  echo
+ done

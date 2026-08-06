@@ -5,30 +5,40 @@ variable "karpenter" {
     namespace                = optional(string, "karpenter")
     chart_version            = string
     release_name             = optional(string, "karpenter")
-    cluster_name             = string
-    cluster_compartment_name = string
-    vcn_compartment_name     = string
+    cluster                  = string
+    cluster_compartment      = string
+    vcn_compartment          = string
     oci_vcn_ip_native        = bool
     ip_families              = optional(list(string), ["IPv4"])
     install_via_bastion      = optional(bool, true)
-    bastion_instance_name    = optional(string, "bastion")
+    bastion_instance         = optional(string, "bastion")
     bastion_kubeconfig_iam = optional(object({
-      enabled                  = optional(bool, true)
-      bastion_compartment_name = optional(string)
-      dynamic_group_name       = optional(string, "kubeconfig_bastion")
-      policy_name              = optional(string, "kubeconfig_bastion_cluster")
-      matching_rule            = optional(string)
-      manage_cluster_family    = optional(bool, true)
+      enabled               = optional(bool, true)
+      bastion_compartment   = optional(string)
+      dynamic_group         = optional(string, "kubeconfig_bastion")
+      policy                = optional(string, "kubeconfig_bastion_cluster")
+      matching_rule         = optional(string)
+      manage_cluster_family = optional(bool, true)
     }), {})
-    node_pool_name = string
+    gitops = optional(object({
+      repo_url             = optional(string, "git@github-devnull:dev-null-loop/private-oke-karpenter.git")
+      revision             = optional(string, "main")
+      argocd_namespace     = optional(string, "argocd")
+      argocd_release_name  = optional(string, "argocd")
+      argocd_chart_version = optional(string, "8.4.0")
+      root_app             = optional(string, "root")
+      chart_app            = optional(string, "karpenter-chart")
+      manifests_app        = optional(string, "karpenter-manifests")
+      repository_secret    = optional(string, "")
+    }), {})
+    node_pool = string
     iam = optional(object({
       enabled                     = optional(bool, true)
-      policy_compartment_name     = optional(string)
-      node_compartment_name       = optional(string)
+      policy_compartment          = optional(string)
+      node_compartment            = optional(string)
       service_account             = optional(string, "karpenter")
-      dynamic_group_name          = optional(string, "kpo_nodes")
-      controller_policy_name      = optional(string, "kpo_controller")
-      cluster_join_policy_name    = optional(string, "kpo_cluster_join")
+      dynamic_group               = optional(string, "kpo_nodes")
+      controller_policy           = optional(string, "kpo_controller")
       enable_capacity_reservation = optional(bool, false)
       enable_compute_cluster      = optional(bool, false)
       enable_cluster_pg           = optional(bool, false)
@@ -59,12 +69,12 @@ variable "karpenter" {
         os_filter         = optional(string)
         os_version_filter = optional(string)
       })
-      primary_subnet_name = string
+      primary_subnet      = string
       primary_vnic_config = optional(object({
         assign_public_ip       = optional(bool)
         skip_source_dest_check = optional(bool)
       }), {})
-      pod_subnet_names = optional(list(string), [])
+      pod_subnets     = optional(list(string), [])
       pod_nsg_names    = optional(list(string), [])
       secondary_vnic_config = optional(object({
         assign_public_ip       = optional(bool)
@@ -87,23 +97,24 @@ variable "karpenter" {
     condition = (
       !var.karpenter.enabled ||
       !var.karpenter.oci_vcn_ip_native ||
-      try(var.karpenter.ocinodeclass.secondary_vnic_ip_count, null) == null ||
-      try(var.karpenter.ocinodeclass.use_same_node_and_pod_subnet, false) ||
-      length(try(var.karpenter.ocinodeclass.pod_subnet_names, [])) > 0
+      var.karpenter.ocinodeclass.secondary_vnic_ip_count == null ||
+      var.karpenter.ocinodeclass.use_same_node_and_pod_subnet ||
+      length(var.karpenter.ocinodeclass.pod_subnets) > 0
     )
-    error_message = "When OCI VCN-native secondary VNIC pod networking is enabled with separate pod subnets, set karpenter.ocinodeclass.pod_subnet_names or explicitly opt into use_same_node_and_pod_subnet = true."
+    error_message = "When OCI VCN-native secondary VNIC pod networking is enabled with separate pod subnets, set karpenter.ocinodeclass.pod_subnets or explicitly opt into use_same_node_and_pod_subnet = true."
   }
   default = {
     enabled                  = false
     chart_version            = "1.1.0"
-    cluster_name             = "c"
-    cluster_compartment_name = "dev"
-    vcn_compartment_name     = "dev"
+    cluster                  = "c"
+    cluster_compartment      = "dev"
+    vcn_compartment          = "dev"
     oci_vcn_ip_native        = true
     bastion_kubeconfig_iam = {
       enabled = true
     }
-    node_pool_name = "n"
+    gitops = {}
+    node_pool      = "n"
     iam = {
       enabled = true
     }
@@ -116,7 +127,7 @@ variable "karpenter" {
     ocinodeclass = {
       name                  = "karpenter-general"
       image_config          = {}
-      primary_subnet_name   = "nodes"
+      primary_subnet        = "nodes"
       primary_vnic_config   = {}
       secondary_vnic_config = {}
     }

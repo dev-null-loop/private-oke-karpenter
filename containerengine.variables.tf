@@ -1,28 +1,30 @@
 variable "clusters" {
   type = map(object({
-    compartment_name   = string
+    compartment        = string
     name               = string
     kubernetes_version = string
-    vcn_name           = string
-    cni_type           = string
-    endpoint_config = optional(object({
-      subnet_name          = string
+    vcn                = string
+    cluster_pod_network_options = object({
+      cni_type = string
+    })
+    endpoint_config = object({
+      subnet               = string
       is_public_ip_enabled = bool
-    }))
+    })
     options = optional(object({
-      service_lb_subnet_names = optional(list(string), [])
+      service_lb_subnets      = optional(list(string), [])
       open_id_connect_discovery = optional(object({
         is_open_id_connect_discovery_enabled = optional(bool)
       }))
-    }))
+    }), {})
   }))
   default = {}
 }
 
 variable "node_pools" {
   type = map(object({
-    compartment_name = string
-    cluster_name     = string
+    compartment      = string
+    cluster          = string
     name             = string
     node_shape       = string
     node_shape_config = optional(object({
@@ -36,18 +38,18 @@ variable "node_pools" {
       placement_configs = list(object({
         availability_domain     = number
         fault_domains           = optional(list(number), [])
-        subnet_name             = string
+        subnet                  = string
         capacity_reservation_id = optional(string)
       }))
       size                                = number
       is_pv_encryption_in_transit_enabled = optional(bool)
       kms_key_id                          = optional(string)
-      node_pool_pod_network_option_details = optional(object({
+      node_pool_pod_network_option_details = object({
         cni_type          = string
         max_pods_per_node = optional(number)
-        pod_subnet_names  = optional(list(string), [])
+        pod_subnets       = optional(list(string), [])
         pod_nsg_ids       = optional(list(string))
-      }))
+      })
       defined_tags  = optional(map(string))
       freeform_tags = optional(map(string))
       nsg_ids       = optional(list(string))
@@ -67,35 +69,6 @@ variable "node_pools" {
       eviction_grace_duration              = optional(string)
       is_force_delete_after_grace_duration = optional(bool)
     }))
-  }))
-  default = {}
-}
-
-variable "helm_releases" {
-  type = map(object({
-    chart            = string
-    name             = string
-    repository       = optional(string)
-    chart_version    = optional(string)
-    namespace        = optional(string)
-    create_namespace = optional(bool)
-    timeout          = optional(number)
-    values           = optional(string)
-  }))
-  default = {}
-}
-
-variable "addons" {
-  type = map(object({
-    cluster_name              = string
-    addon_name                = string
-    configurations            = map(string)
-    compartment_name          = optional(string)
-    load_balancer_subnet_name = optional(string)
-    min_nodes                 = optional(number)
-    max_nodes                 = optional(number)
-    node_pool_name            = optional(string)
-    node_pool_tags            = optional(map(string))
   }))
   default = {}
 }

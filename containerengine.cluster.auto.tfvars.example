@@ -4,17 +4,19 @@ oke_worker_node_image_ids = {
 
 clusters = {
   c = {
-    compartment_name   = "dev"
+    compartment        = "dev"
     name               = "cluster"
-    vcn_name           = "vcn"
+    vcn                = "vcn"
     kubernetes_version = "v1.33.1"
-    cni_type           = "OCI_VCN_IP_NATIVE"
+    cluster_pod_network_options = {
+      cni_type = "OCI_VCN_IP_NATIVE"
+    }
     endpoint_config = {
-      subnet_name          = "api_endpoint"
+      subnet               = "api_endpoint"
       is_public_ip_enabled = false
     }
     options = {
-      service_lb_subnet_names = ["svcs_lb"]
+      service_lb_subnets      = ["svcs_lb"]
       open_id_connect_discovery = {
 	is_open_id_connect_discovery_enabled = true
       }
@@ -24,37 +26,31 @@ clusters = {
 
 node_pools = {
   n = {
-    cluster_name       = "c"
-    compartment_name   = "dev"
+    cluster            = "c"
+    compartment        = "dev"
     kubernetes_version = "v1.33.1"
     name               = "pool"
     node_source_details = {
       image_name = "Oracle-Linux-8.10-2026.02.28-0-OKE-1.33.10-1402"
     }
-    cloud_init = [
-      {
-	content_type = "text/cloud-config"
-	filename     = "userdata/oke-copyfail-ksplice.yaml"
-      }
-    ]
     node_config_details = {
       node_pool_pod_network_option_details = {
 	cni_type          = "OCI_VCN_IP_NATIVE"
 	max_pods_per_node = 31
-	pod_subnet_names  = ["nodes"]
+	pod_subnets       = ["nodes"]
       }
       placement_configs = [
 	{
 	  availability_domain = 1
-	  subnet_name         = "nodes"
+	  subnet              = "nodes"
 	},
 	{
 	  availability_domain = 2
-	  subnet_name         = "nodes"
+	  subnet              = "nodes"
 	},
 	{
 	  availability_domain = 3
-	  subnet_name         = "nodes"
+	  subnet              = "nodes"
 	}
       ]
       size = 1
@@ -66,47 +62,4 @@ node_pools = {
     node_shape     = "VM.Standard.E3.Flex"
     ssh_public_key = "ssh-rsa ..."
   },
-}
-
-addons = {
-  certmanager = {
-    cluster_name = "c"
-    addon_name   = "CertManager"
-    configurations = {
-      numOfReplicas = 1
-    }
-  }
-  nic = {
-    cluster_name              = "c"
-    addon_name                = "NativeIngressController"
-    compartment_name          = "dev"
-    load_balancer_subnet_name = "svcs_lb"
-    configurations = {
-      numOfReplicas = 2
-    }
-  }
-  weblogic = {
-    cluster_name = "c"
-    addon_name   = "WeblogicKubernetesOperator"
-    configurations = {
-      numOfReplicas = 1
-    }
-  }
-  autoscaler = {
-    cluster_name     = "c"
-    addon_name       = "ClusterAutoscaler"
-    min_nodes        = 2
-    max_nodes        = 4
-    node_pool_name   = "n"
-    node_pool_tags   = { ca = "ac" }
-    compartment_name = "dev"
-    configurations   = {}
-  }
-  istio = {
-    cluster_name = "c"
-    addon_name   = "Istio"
-    configurations = {
-      enableIngressGateway = true
-    }
-  }
 }

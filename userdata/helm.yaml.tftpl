@@ -27,15 +27,14 @@ write_files:
       ${replace(chomp(kubeconfig_content), "\n", "\n      ")}
   - path: /var/tmp/opc-bash-profile
     content: |
+      export KUBECONFIG=/home/opc/.kube/config
       alias k="kubectl"
       alias kg="kubectl get"
       alias kgp="kubectl get pods"
 runcmd:
   - mkdir -p /home/opc/.kube
-  - echo "Created ~/.kube directory..."
   - touch /home/opc/.bash_profile
   - cat /var/tmp/opc-bash-profile >> /home/opc/.bash_profile
   - mv /var/tmp/kubeconfig /home/opc/.kube/config
-  - echo "Moved kubeconfig to ~/.kube/config..."
-  - chown -R opc:opc /home/opc # because https://bugs.launchpad.net/cloud-init/+bug/1231541
+  - chown -R opc:opc /home/opc
   - chmod 600 /home/opc/.kube/config

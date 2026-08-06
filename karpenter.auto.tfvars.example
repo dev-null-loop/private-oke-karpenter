@@ -1,12 +1,16 @@
 karpenter = {
   enabled                  = true
   chart_version            = "1.1.0"
-  cluster_name             = "c"
-  cluster_compartment_name = "dev"
-  vcn_compartment_name     = "dev"
+  cluster                  = "c"
+  cluster_compartment      = "dev"
+  vcn_compartment          = "dev"
   oci_vcn_ip_native        = true
-  bastion_instance_name    = "bastion"
-  node_pool_name           = "n"
+  bastion_instance         = "bastion"
+  node_pool                = "n"
+
+  bastion_kubeconfig_iam = {
+    enabled = false
+  }
 
   nodepool = {
     name                     = "karpenter-general"
@@ -32,11 +36,11 @@ karpenter = {
       os_filter         = "Oracle Linux"
       os_version_filter = "8"
     }
-    primary_subnet_name = "nodes"
+    primary_subnet      = "nodes"
     primary_vnic_config = {
       assign_public_ip = true
     }
-    pod_subnet_names = ["kpo_pods"]
+    pod_subnets     = ["kpo_pods"]
     secondary_vnic_config = {
       skip_source_dest_check = true
     }

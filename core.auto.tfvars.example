@@ -3,29 +3,29 @@ vcns = {
     cidr_blocks      = ["10.0.0.0/16"]
     display_name     = "vcn"
     dns_label        = "vcn"
-    compartment_name = "dev"
+    compartment      = "dev"
     is_ipv6enabled   = true
   },
 }
 
 internet_gateways = {
   ig = {
-    vcn_name = "vcn"
+    vcn          = "vcn"
+    display_name = "ig"
   },
 }
 
 nat_gateways = {
   ng = {
     display_name = "ng"
-    vcn_name     = "vcn"
+    vcn          = "vcn"
   },
 }
 
 service_gateways = {
   sg = {
     display_name = "sg"
-    vcn_name     = "vcn"
-    service_name = "services"
+    vcn          = "vcn"
   },
 }
 
@@ -35,10 +35,10 @@ subnets = {
     cidr_block                 = "10.0.20.0/24"
     dns_label                  = "svcslb"
     prohibit_public_ip_on_vnic = false
-    security_list_names        = ["svcs_lb"]
-    route_table_name           = "public"
-    vcn_name                   = "vcn"
-    compartment_name           = "dev"
+    security_lists             = ["svcs_lb"]
+    route_table                = "public"
+    vcn                        = "vcn"
+    compartment                = "dev"
   },
   nodes = {
     display_name               = "nodes"
@@ -46,10 +46,10 @@ subnets = {
     dns_label                  = "nodes"
     prohibit_internet_ingress  = false
     prohibit_public_ip_on_vnic = false
-    security_list_names        = ["nodes"]
-    route_table_name           = "public"
-    vcn_name                   = "vcn"
-    compartment_name           = "dev"
+    security_lists             = ["nodes"]
+    route_table                = "public"
+    vcn                        = "vcn"
+    compartment                = "dev"
   },
   kpo_pods = {
     display_name               = "kpo_pods"
@@ -57,10 +57,10 @@ subnets = {
     dns_label                  = "kpopods"
     prohibit_internet_ingress  = true
     prohibit_public_ip_on_vnic = true
-    security_list_names        = ["kpo_pods"]
-    route_table_name           = "private"
-    vcn_name                   = "vcn"
-    compartment_name           = "dev"
+    security_lists             = ["kpo_pods"]
+    route_table                = "private"
+    vcn                        = "vcn"
+    compartment                = "dev"
   },
   api_endpoint = {
     display_name               = "api_endpoint"
@@ -68,16 +68,16 @@ subnets = {
     dns_label                  = "apiendpoint"
     prohibit_internet_ingress  = true
     prohibit_public_ip_on_vnic = true
-    security_list_names        = ["api_endpoint"]
-    route_table_name           = "private"
-    vcn_name                   = "vcn"
-    compartment_name           = "dev"
+    security_lists             = ["api_endpoint"]
+    route_table                = "private"
+    vcn                        = "vcn"
+    compartment                = "dev"
   },
 }
 route_tables = {
   public = {
     display_name = "public"
-    vcn_name     = "vcn"
+    vcn          = "vcn"
     route_rules = [
       {
 	destination         = "0.0.0.0/0"
@@ -88,7 +88,7 @@ route_tables = {
   },
   private = {
     display_name = "private"
-    vcn_name     = "vcn"
+    vcn          = "vcn"
     route_rules = [
       {
 	description         = "traffic to OCI services"
@@ -107,7 +107,7 @@ route_tables = {
 }
 security_lists = {
   svcs_lb = {
-    vcn_name     = "vcn"
+    vcn          = "vcn"
     display_name = "svcs_lb"
     egress_rules = [
       {
@@ -160,7 +160,7 @@ security_lists = {
     ]
   },
   api_endpoint = {
-    vcn_name     = "vcn"
+    vcn          = "vcn"
     display_name = "api_endpoint"
     egress_rules = [
       {
@@ -241,7 +241,7 @@ security_lists = {
     ]
   },
   nodes = {
-    vcn_name     = "vcn"
+    vcn          = "vcn"
     display_name = "nodes"
     egress_rules = [
       {
@@ -385,7 +385,7 @@ security_lists = {
     ]
   }
   kpo_pods = {
-    vcn_name     = "vcn"
+    vcn          = "vcn"
     display_name = "kpo_pods"
     egress_rules = [
       {
@@ -481,11 +481,11 @@ source_ids = {
 
 instances = {
   bastion = {
-    compartment_name    = "dev"
+    compartment         = "dev"
     availability_domain = 1
     create_vnic_details = {
       assign_public_ip = true
-      subnet_name      = "svcs_lb"
+      subnet           = "svcs_lb"
     }
     display_name = "bastion"
     shape        = "VM.Standard.E5.Flex"
@@ -504,16 +504,10 @@ instances = {
       {
 	content_type = "text/cloud-config"
 	filename     = "userdata/helm.yaml.tftpl"
-	vars         = { filename = "kubeconfig" }
       },
       {
 	content_type = "text/cloud-config"
 	filename     = "userdata/argocd-bootstrap.yaml.tftpl"
-	vars = {
-	  argocd_namespace     = "argocd"
-	  argocd_release_name  = "argocd"
-	  argocd_chart_version = "8.4.0"
-	}
       }
     ]
   }
