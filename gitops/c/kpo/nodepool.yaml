@@ -16,7 +16,7 @@ spec:
           operator: In
           values:
             - on-demand
-        - key: node.kubernetes.io/instance-type
+        - key: oci.oraclecloud.com/instance-shape
           operator: In
           values:
             - VM.Standard.E3.Flex

@@ -15,7 +15,7 @@ locals {
     primaryVnicSubnetId    = module.subnets["nodes"].id
     secondaryVnicSubnetId  = module.subnets["kpo_pods"].id
     preBootstrapInitScript = filebase64("${path.module}/gitops/c/kpo/pre-bootstrap-init.sh")
-    shapeConfigOcpus       = 2
+    shapeConfigOcpus       = 4
     shapeConfigMemoryInGbs = 16
   }
 }
