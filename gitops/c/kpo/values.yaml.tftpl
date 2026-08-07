@@ -2,6 +2,10 @@ hostNetwork: true
 dnsPolicy: ClusterFirstWithHostNet
 replicas: 1
 
+serviceAccount:
+  create: true
+  name: "${serviceAccountName}"
+
 settings:
   clusterCompartmentId: "${clusterCompartmentId}"
   vcnCompartmentId: "${vcnCompartmentId}"
