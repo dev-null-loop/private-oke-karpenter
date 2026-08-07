@@ -22,5 +22,5 @@ spec:
     secondaryVnicConfigs:
       - subnetConfig:
           subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaatkfrydymgk2utrq6tpwwsudxe2q4x5nxty2pafdnydpkd4odrj3q
-        ipCount: 32
+        ipCount: 8
         skipSourceDestCheck: true
