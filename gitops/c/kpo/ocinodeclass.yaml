@@ -17,10 +17,10 @@ spec:
   networkConfig:
     primaryVnicConfig:
       subnetConfig:
-        subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaa74g7wzdo5je5vfki3wqgg5wohcboum3dhbsygvlglkeln7mbjpsq
+        subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaa346zxuspl23zo2zxhbstgpgs7xpi5oarrnzqz7ew2ck6f2xlnwxq
       assignPublicIp: true
     secondaryVnicConfigs:
       - subnetConfig:
-          subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaatkfrydymgk2utrq6tpwwsudxe2q4x5nxty2pafdnydpkd4odrj3q
+          subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaarpi6ygv7h4bjwggk4nczhij2d35b3n2dx7caopuykvkrn4dt4osq
         ipCount: 8
         skipSourceDestCheck: true

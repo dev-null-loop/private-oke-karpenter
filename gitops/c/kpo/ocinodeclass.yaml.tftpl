@@ -18,7 +18,7 @@ spec:
     primaryVnicConfig:
       subnetConfig:
         subnetId: ${primaryVnicSubnetId}
-      assignPublicIp: true
+      assignPublicIp: ${primaryVnicAssignPublicIp}
     secondaryVnicConfigs:
       - subnetConfig:
           subnetId: ${secondaryVnicSubnetId}
