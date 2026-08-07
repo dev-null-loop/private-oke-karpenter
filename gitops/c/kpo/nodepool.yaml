@@ -16,6 +16,10 @@ spec:
           operator: In
           values:
             - on-demand
+        - key: node.kubernetes.io/instance-type
+          operator: In
+          values:
+            - VM.Standard.E3.Flex
   disruption:
     budgets:
       - nodes: 5%

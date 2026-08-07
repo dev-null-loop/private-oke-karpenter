@@ -4,6 +4,9 @@ metadata:
   name: karpenter-general
 spec:
   preBootstrapInitScript: ${preBootstrapInitScript}
+  shapeConfigs:
+    - ocpus: ${shapeConfigOcpus}
+      memoryInGbs: ${shapeConfigMemoryInGbs}
   volumeConfig:
     bootVolumeConfig:
       imageConfig:
