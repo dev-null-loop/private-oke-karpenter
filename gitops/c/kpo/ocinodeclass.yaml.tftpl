@@ -1,0 +1,26 @@
+apiVersion: oci.oraclecloud.com/v1beta1
+kind: OCINodeClass
+metadata:
+  name: karpenter-general
+spec:
+  shapeConfigs:
+    - ocpus: 1
+      memoryInGbs: 16
+  preBootstrapInitScript: ${preBootstrapInitScript}
+  volumeConfig:
+    bootVolumeConfig:
+      imageConfig:
+        imageType: OKEImage
+        imageFilter:
+          osFilter: Oracle Linux
+          osVersionFilter: "8"
+  networkConfig:
+    primaryVnicConfig:
+      subnetConfig:
+        subnetId: ${primaryVnicSubnetId}
+      assignPublicIp: true
+    secondaryVnicConfigs:
+      - subnetConfig:
+          subnetId: ${secondaryVnicSubnetId}
+        ipCount: 32
+        skipSourceDestCheck: true

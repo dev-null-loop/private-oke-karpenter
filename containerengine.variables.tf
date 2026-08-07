@@ -12,7 +12,7 @@ variable "clusters" {
       is_public_ip_enabled = bool
     })
     options = optional(object({
-      service_lb_subnets      = optional(list(string), [])
+      service_lb_subnets = optional(list(string), [])
       open_id_connect_discovery = optional(object({
         is_open_id_connect_discovery_enabled = optional(bool)
       }))
@@ -23,10 +23,10 @@ variable "clusters" {
 
 variable "node_pools" {
   type = map(object({
-    compartment      = string
-    cluster          = string
-    name             = string
-    node_shape       = string
+    compartment = string
+    cluster     = string
+    name        = string
+    node_shape  = string
     node_shape_config = optional(object({
       ocpus         = optional(number)
       memory_in_gbs = optional(number)

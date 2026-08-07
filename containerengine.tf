@@ -1,10 +1,10 @@
 module "clusters" {
-  source             = "git@github.com:dev-null-loop/oci_containerengine//cluster"
-  for_each           = local.clusters
-  compartment_id     = var.compartment_ids[each.value.compartment]
-  name               = each.value.name
-  kubernetes_version = each.value.kubernetes_version
-  vcn_id             = module.vcns[each.value.vcn].id
+  source                      = "git@github.com:dev-null-loop/oci_containerengine//cluster"
+  for_each                    = local.clusters
+  compartment_id              = var.compartment_ids[each.value.compartment]
+  name                        = each.value.name
+  kubernetes_version          = each.value.kubernetes_version
+  vcn_id                      = module.vcns[each.value.vcn].id
   cluster_pod_network_options = each.value.cluster_pod_network_options
   endpoint_config             = each.value.endpoint_config
   options                     = each.value.options

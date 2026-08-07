@@ -1,10 +1,10 @@
 variable "vcns" {
   type = map(object({
-    cidr_blocks      = list(string)
-    display_name     = string
-    dns_label        = string
-    compartment      = string
-    is_ipv6enabled   = optional(bool)
+    cidr_blocks    = list(string)
+    display_name   = string
+    dns_label      = string
+    compartment    = string
+    is_ipv6enabled = optional(bool)
   }))
 
   validation {

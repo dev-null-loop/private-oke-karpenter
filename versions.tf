@@ -3,6 +3,9 @@ terraform {
     cloudinit = {
       source = "hashicorp/cloudinit"
     }
+    local = {
+      source = "hashicorp/local"
+    }
     oci = {
       source  = "oracle/oci"
       version = ">= 8.14.0"

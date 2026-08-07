@@ -45,17 +45,3 @@ output "clusters" {
     }
   }
 }
-
-output "gitops_kpo_patch_values" {
-  value = {
-    values_yaml = {
-      clusterCompartmentId    = var.compartment_ids[var.karpenter.cluster_compartment]
-      vcnCompartmentId        = var.compartment_ids[var.subnets["nodes"].compartment]
-      apiserverEndpoint       = split(":", coalesce(module.clusters[var.karpenter.cluster].endpoints[0].private_endpoint, module.clusters[var.karpenter.cluster].endpoints[0].kubernetes))[0]
-    }
-    ocinodeclass_yaml = {
-      primaryVnicSubnetId    = module.subnets["nodes"].id
-      secondaryVnicSubnetId  = module.subnets["kpo_pods"].id
-    }
-  }
-}

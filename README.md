@@ -23,10 +23,12 @@ Terraform no longer renders or applies KPO manifests.
 
 This repo is not a one-step blank-environment deployment.
 
-Because you do not know the real environment values in advance, deployment is now a 2-step process:
+Because you do not know the real environment values in advance, deployment is now a staged GitOps process:
 
 1. `terraform apply`
-2. update committed GitOps environment files, then apply/sync GitOps
+2. commit and push the Terraform-rendered GitOps environment files
+3. seed Argo CD once on a brand-new cluster
+4. wait for Argo CD to sync that desired state
 
 The environment-specific files are:
 
@@ -48,38 +50,55 @@ The environment-specific files are:
   - Git
   - Argo CD
 
-2. Discover the real environment values from the created stack
-- at minimum:
-  - API server private endpoint host
-  - subnet OCIDs for:
-    - primary node subnet
-    - pod secondary subnet
-  - any changed compartment OCIDs if applicable
-
-3. Update the committed GitOps files
-- patch:
+2. Commit and push the Terraform-rendered GitOps files
+- Terraform renders:
   - `gitops/c/kpo/values.yaml`
   - `gitops/c/kpo/ocinodeclass.yaml`
+- from:
+  - `gitops/c/kpo/values.yaml.tftpl`
+  - `gitops/c/kpo/ocinodeclass.yaml.tftpl`
+- Argo CD watches the repo, so this push is what publishes the desired runtime state
 
 Important:
-- `settings.apiserverEndpoint` must be host-only, not `host:port`
+- `settings.apiserverEndpoint` is rendered host-only, not `host:port`
 - for example: `10.0.0.8`, not `10.0.0.8:6443`
 
-4. Apply the root GitOps app manifests
-- for example from bastion:
+3. Seed Argo CD once on a brand-new cluster
+- this is required only the first time, after a fresh cluster bring-up
+- run from bastion:
 
 ```bash
 kubectl apply -k /home/opc/private-oke-karpenter/gitops/c
 ```
 
-5. Let Argo CD reconcile
+- this creates the root Argo CD `Application` objects
+- after those objects exist, steady-state changes come from Git pushes and Argo sync
+
+4. Let Argo CD reconcile
 - `chart.yaml`
 - `manifests.yaml`
+- the rendered `gitops/c/kpo/values.yaml`
+- the rendered `gitops/c/kpo/ocinodeclass.yaml`
 
 After that:
 - Argo deploys the KPO Helm chart
 - Argo applies the committed `OCINodeClass`
 - Argo applies the committed `NodePool`
+
+## Bootstrap Vs Steady State
+
+Brand-new cluster:
+
+1. `terraform apply`
+2. `git add`, `git commit`, `git push`
+3. `kubectl apply -k /home/opc/private-oke-karpenter/gitops/c`
+4. wait for Argo CD sync
+
+Steady-state updates after that first seed:
+
+1. `terraform apply`
+2. `git add`, `git commit`, `git push`
+3. wait for Argo CD sync
 
 ## GitOps Layout
 
@@ -103,7 +122,7 @@ After that:
 - `userdata/argocd-bootstrap.yaml.tftpl`
   - installs Argo CD
   - clones this repo on the bastion
-  - does not auto-apply the Karpenter GitOps apps
+  - bootstraps Argo CD only; steady-state KPO rollout happens from Git pushes and Argo sync
 
 This is still day-0 cloud-init on the bastion. Changing bastion cloud-init can still force bastion replacement.
 
@@ -133,6 +152,7 @@ That means if you recreate infra with different:
 - image assumptions
 
 you must update the committed GitOps files to match the new environment.
+Terraform now renders those two environment-specific files from their `.tftpl` sources during `terraform apply`.
 
 ## Destroy Flow
 
