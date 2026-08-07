@@ -2,9 +2,4 @@ karpenter = {
   enabled             = true
   cluster             = "c"
   cluster_compartment = "dev"
-  bastion_instance    = "bastion"
-
-  bastion_kubeconfig_iam = {
-    enabled = false
-  }
 }

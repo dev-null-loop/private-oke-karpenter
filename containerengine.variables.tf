@@ -62,8 +62,8 @@ variable "node_pools" {
     cloud_init = optional(list(object({
       filename     = optional(string)
       content      = optional(string)
-      content_type = optional(string)
-      vars         = optional(map(string))
+      content_type = optional(string, "text/x-shellscript")
+      vars         = optional(map(string), {})
     })), [])
     node_metadata = optional(map(string))
     node_eviction_node_pool_settings = optional(object({
@@ -76,6 +76,15 @@ variable "node_pools" {
       maximum_unavailable     = optional(number)
     }))
   }))
+  validation {
+    condition = alltrue(flatten([
+      for np in values(var.node_pools) : [
+        for part in np.cloud_init :
+        (part.filename != null) != (part.content != null)
+      ]
+    ]))
+    error_message = "Each node_pools.cloud_init item must set exactly one of filename or content."
+  }
   default = {}
 }
 

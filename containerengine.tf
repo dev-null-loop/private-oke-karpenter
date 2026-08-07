@@ -11,7 +11,7 @@ module "clusters" {
 }
 
 module "node_pools" {
-  source                           = "../oci_containerengine/node_pool"
+  source                           = "git@github.com:dev-null-loop/oci_containerengine//node_pool"
   for_each                         = local.node_pools
   cluster_id                       = module.clusters[each.value.cluster].id
   compartment_id                   = var.compartment_ids[each.value.compartment]

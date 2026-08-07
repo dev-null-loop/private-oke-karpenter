@@ -1,34 +1,27 @@
 locals {
-  karpenter_iam_enabled          = local.karpenter_enabled && var.karpenter.iam.enabled
-  bastion_kubeconfig_iam_enabled = local.karpenter_enabled && var.karpenter.bastion_kubeconfig_iam.enabled
-  karpenter_service_account      = coalesce(var.karpenter.iam.service_account, "karpenter")
+  karpenter_iam_enabled        = var.karpenter.enabled && var.karpenter.iam.enabled
+  karpenter_compute_dg_enabled = var.karpenter.enabled
 
   karpenter_policy_compartment = coalesce(
     var.karpenter.iam.policy_compartment,
     var.karpenter.cluster_compartment
   )
 
-  dynamic_groups = merge(
-    local.karpenter_iam_enabled ? {
-      karpenter_nodes = {
-        tenancy_id    = var.tenancy_ocid
-        name          = var.karpenter.iam.dynamic_group
-        description   = "Dynamic group for OCI Karpenter launched nodes"
-        matching_rule = "ALL {instance.compartment.id = '${var.compartment_ids[coalesce(var.karpenter.iam.node_compartment, var.karpenter.cluster_compartment)]}'}"
-      }
-    } : {},
-    local.bastion_kubeconfig_iam_enabled ? {
-      bastion_kubeconfig = {
-        tenancy_id  = var.tenancy_ocid
-        name        = var.karpenter.bastion_kubeconfig_iam.dynamic_group
-        description = "Dynamic group for bastion instance-principal kubeconfig access"
-        matching_rule = coalesce(
-          var.karpenter.bastion_kubeconfig_iam.matching_rule,
-          "ALL {instance.compartment.id = '${var.compartment_ids[coalesce(var.karpenter.bastion_kubeconfig_iam.bastion_compartment, var.instances[var.karpenter.bastion_instance].compartment, var.karpenter.cluster_compartment)]}'}"
-        )
-      }
-    } : {}
-  )
+  workload_conditions = join(", ", [
+    "request.principal.type = 'workload'",
+    "request.principal.namespace = '${var.karpenter.namespace}'",
+    "request.principal.service_account = '${var.karpenter.iam.service_account}'",
+    "request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}'",
+  ])
+
+  dynamic_groups = local.karpenter_compute_dg_enabled ? {
+    karpenter_compute = {
+      tenancy_id    = var.tenancy_ocid
+      name          = var.karpenter.iam.dynamic_group
+      description   = "Dynamic group for KPO-launched nodes and bastion instance-principal kubeconfig access"
+      matching_rule = "ALL {instance.compartment.id = '${var.compartment_ids[var.karpenter.cluster_compartment]}'}"
+    }
+  } : {}
 
   policies = merge(
     local.karpenter_iam_enabled ? {
@@ -38,39 +31,35 @@ locals {
         description    = "OCI Karpenter controller workload identity policy"
         statements = concat(
           [
-            "Allow any-user to manage instance-family in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
-            "Allow any-user to manage volumes in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
-            "Allow any-user to manage volume-attachments in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
-            "Allow any-user to manage virtual-network-family in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
-            "Allow any-user to inspect compartments in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }",
-            "Allow dynamic-group ${var.karpenter.iam.dynamic_group} to {CLUSTER_JOIN} in compartment ${local.karpenter_policy_compartment}"
+            "Allow any-user to manage instance-family in compartment ${local.karpenter_policy_compartment} where all { ${local.workload_conditions} }",
+            "Allow any-user to manage volumes in compartment ${local.karpenter_policy_compartment} where all { ${local.workload_conditions} }",
+            "Allow any-user to manage volume-attachments in compartment ${local.karpenter_policy_compartment} where all { ${local.workload_conditions} }",
+            "Allow any-user to manage virtual-network-family in compartment ${local.karpenter_policy_compartment} where all { ${local.workload_conditions} }",
+            "Allow any-user to inspect compartments in compartment ${local.karpenter_policy_compartment} where all { ${local.workload_conditions} }",
+            "Allow dynamic-group ${var.karpenter.iam.dynamic_group} to {CLUSTER_JOIN} in compartment ${local.karpenter_policy_compartment}",
           ],
           var.karpenter.iam.enable_capacity_reservation ? [
-            "Allow any-user to use compute-capacity-reservations in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
+            "Allow any-user to use compute-capacity-reservations in compartment ${local.karpenter_policy_compartment} where all { ${local.workload_conditions} }",
           ] : [],
           var.karpenter.iam.enable_compute_cluster ? [
-            "Allow any-user to use compute-clusters in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
+            "Allow any-user to use compute-clusters in compartment ${local.karpenter_policy_compartment} where all { ${local.workload_conditions} }",
           ] : [],
           var.karpenter.iam.enable_cluster_pg ? [
-            "Allow any-user to use cluster-placement-groups in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
+            "Allow any-user to use cluster-placement-groups in compartment ${local.karpenter_policy_compartment} where all { ${local.workload_conditions} }",
           ] : [],
           var.karpenter.iam.enable_defined_tags ? [
-            "Allow any-user to use tag-namespaces in compartment ${local.karpenter_policy_compartment} where all { request.principal.type = 'workload', request.principal.namespace = '${var.karpenter.namespace}', request.principal.service_account = '${local.karpenter_service_account}', request.principal.cluster_id = '${module.clusters[var.karpenter.cluster].id}' }"
+            "Allow any-user to use tag-namespaces in compartment ${local.karpenter_policy_compartment} where all { ${local.workload_conditions} }",
           ] : []
         )
       }
     } : {},
-    local.bastion_kubeconfig_iam_enabled ? {
+    var.karpenter.enabled ? {
       bastion_kubeconfig = {
-        compartment_id = var.tenancy_ocid
+        compartment_id = var.compartment_ids[var.karpenter.cluster_compartment]
         name           = var.karpenter.bastion_kubeconfig_iam.policy
         description    = "Policy for bastion instance-principal kubeconfig access"
         statements = [
-          format(
-            "Allow dynamic-group %s to %s in tenancy",
-            var.karpenter.bastion_kubeconfig_iam.dynamic_group,
-            var.karpenter.bastion_kubeconfig_iam.manage_cluster_family ? "manage cluster-family" : "use clusters"
-          )
+          "Allow dynamic-group ${var.karpenter.iam.dynamic_group} to manage cluster-family in compartment ${var.karpenter.cluster_compartment}",
         ]
       }
     } : {}

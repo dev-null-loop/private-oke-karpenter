@@ -1,6 +1,4 @@
 locals {
-  karpenter_enabled = var.karpenter.enabled
-
   network_entity_ids = merge(
     { for k, v in module.internet_gateways : "ig_${k}" => v.id },
     { for k, v in module.nat_gateways : "ng_${k}" => v.id },
@@ -42,25 +40,14 @@ locals {
     })
   }
 
-  instance_template_vars = {
-    for k, v in var.instances : k => merge(
-      concat(
-        [for part in v.cloud_init : part.vars != null ? part.vars : {}],
-        [{
-          kubeconfig_content = contains(keys(var.clusters), v.managed_cluster) ? module.kubeconfigs[v.managed_cluster].kubeconfig_instance_principal : ""
-        }]
-      )...
-    )
-  }
-
-  instance_cloud_init_parts = {
-    for k, v in var.instances : k => v.cloud_init
+  instance_cloud_init_inputs = {
+    for k, v in var.instances : k => {
+      cloud_init = v.cloud_init
+      cloud_init_vars = merge(v.cloud_init_vars, {
+        kubeconfig_content = module.kubeconfigs[v.managed_cluster].kubeconfig_instance_principal
+      })
+    }
     if length(v.cloud_init) > 0
-  }
-
-  instance_cloud_init_content = {
-    for k, v in var.instances : k =>
-    length(v.cloud_init) == 0 ? null : data.cloudinit_config.instances[k].rendered
   }
 
   instances = {
@@ -74,7 +61,7 @@ locals {
           ssh_authorized_keys = join("\n", v.ssh_public_keys)
         },
         length(v.cloud_init) == 0 ? {} : {
-          user_data = base64encode(local.instance_cloud_init_content[k])
+          user_data = base64encode(data.cloudinit_config.instances[k].rendered)
         }
       )
       source_details = merge(v.source_details, {
@@ -118,21 +105,21 @@ locals {
 }
 
 data "cloudinit_config" "instances" {
-  for_each      = local.instance_cloud_init_parts
+  for_each      = local.instance_cloud_init_inputs
   gzip          = false
   base64_encode = false
 
   dynamic "part" {
-    for_each = each.value
-    iterator = part
+    for_each = each.value.cloud_init
+    iterator = p
 
     content {
-      content_type = coalesce(part.value.content_type, "text/x-shellscript")
-      filename     = part.value.filename != null ? basename(part.value.filename) : null
+      content_type = p.value.content_type
+      filename     = p.value.filename != null ? basename(p.value.filename) : null
       content = (
-        part.value.filename != null ?
-        templatefile("${path.root}/${part.value.filename}", local.instance_template_vars[each.key]) :
-        templatestring(part.value.content, local.instance_template_vars[each.key])
+        p.value.filename != null ?
+        templatefile("${path.root}/${p.value.filename}", merge(each.value.cloud_init_vars, p.value.vars)) :
+        templatestring(p.value.content, merge(each.value.cloud_init_vars, p.value.vars))
       )
       merge_type = "list(append)+dict(no_replace,recurse_list)+str(append)"
     }

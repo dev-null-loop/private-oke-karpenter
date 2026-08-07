@@ -5,20 +5,19 @@ variable "karpenter" {
     namespace           = optional(string, "karpenter")
     cluster             = string
     cluster_compartment = string
+    node_subnet         = optional(string, "nodes")
+    pod_subnet          = optional(string, "kpo_pods")
+    assign_public_ip    = optional(bool, true)
     bastion_instance    = optional(string, "bastion")
     bastion_kubeconfig_iam = optional(object({
-      enabled               = optional(bool, true)
       bastion_compartment   = optional(string)
-      dynamic_group         = optional(string, "kubeconfig_bastion")
       policy                = optional(string, "kubeconfig_bastion_cluster")
-      matching_rule         = optional(string)
-      manage_cluster_family = optional(bool, true)
     }), {})
     iam = optional(object({
       enabled                     = optional(bool, true)
       policy_compartment          = optional(string)
       node_compartment            = optional(string)
-      service_account             = optional(string)
+      service_account             = optional(string, "karpenter")
       dynamic_group               = optional(string, "kpo_nodes")
       controller_policy           = optional(string, "kpo_controller")
       enable_capacity_reservation = optional(bool, false)
@@ -31,11 +30,5 @@ variable "karpenter" {
     enabled             = false
     cluster             = "c"
     cluster_compartment = "dev"
-    bastion_kubeconfig_iam = {
-      enabled = true
-    }
-    iam = {
-      enabled = true
-    }
   }
 }

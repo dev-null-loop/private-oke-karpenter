@@ -132,9 +132,10 @@ variable "instances" {
     cloud_init = optional(list(object({
       filename     = optional(string)
       content      = optional(string)
-      content_type = optional(string)
-      vars         = optional(map(string))
+      content_type = optional(string, "text/x-shellscript")
+      vars         = optional(map(string), {})
     })), [])
+    cloud_init_vars = optional(map(string), {})
     source_details = object({
       source_name = string
       source_type = optional(string, "image")
@@ -146,6 +147,22 @@ variable "instances" {
   validation {
     condition     = alltrue([for i in var.instances : can(regex("(Oracle-Linux-|Windows-Server-).*", i.source_details.source_name))])
     error_message = "Error: Invalid image name..."
+  }
+  validation {
+    condition = alltrue(flatten([
+      for i in values(var.instances) : [
+        for part in i.cloud_init :
+        (part.filename != null) != (part.content != null)
+      ]
+    ]))
+    error_message = "Each instances.cloud_init item must set exactly one of filename or content."
+  }
+  validation {
+    condition = alltrue([
+      for i in values(var.instances) :
+      contains(keys(var.clusters), i.managed_cluster)
+    ])
+    error_message = "Each instances.managed_cluster must reference a key defined in var.clusters."
   }
   default = {}
 }
