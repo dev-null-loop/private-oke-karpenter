@@ -5,6 +5,7 @@ variable "karpenter" {
     namespace           = optional(string, "karpenter")
     cluster             = string
     cluster_compartment = string
+    ssh_public_key      = optional(string)
     node_subnet         = optional(string, "nodes")
     pod_subnet          = optional(string, "kpo_pods")
     assign_public_ip    = optional(bool, true)
