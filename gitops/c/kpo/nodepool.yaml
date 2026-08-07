@@ -26,5 +26,5 @@ spec:
     consolidateAfter: 60m
     consolidationPolicy: WhenEmpty
   limits:
-    cpu: 4
-    memory: 32Gi
+    cpu: 16
+    memory: 64Gi
