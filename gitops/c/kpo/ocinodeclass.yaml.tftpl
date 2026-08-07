@@ -3,9 +3,6 @@ kind: OCINodeClass
 metadata:
   name: karpenter-general
 spec:
-  shapeConfigs:
-    - ocpus: 4
-      memoryInGbs: 16
   preBootstrapInitScript: ${preBootstrapInitScript}
   volumeConfig:
     bootVolumeConfig:
