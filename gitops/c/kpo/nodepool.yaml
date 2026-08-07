@@ -16,10 +16,6 @@ spec:
           operator: In
           values:
             - on-demand
-        - key: oci.oraclecloud.com/instance-shape
-          operator: In
-          values:
-            - VM.Standard.E5.Flex
   disruption:
     budgets:
       - nodes: 5%
