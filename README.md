@@ -50,6 +50,18 @@ For Ubuntu custom images, the readable source is:
 
 It provides the compatibility shim KPO needs for Ubuntu worker bootstrap.
 
+Validated on August 19, 2026:
+
+- KPO can select a custom Ubuntu image through `imageType: OKEImage` plus `imageFilter`.
+- The custom image must resolve to a cluster-compatible Kubernetes version.
+- In this repo, `osFilter: Canonical Ubuntu` and `osVersionFilter: "24.04"` worked with a custom image after its `k8s_version` tag was changed to match the cluster version and KPO was restarted.
+- End-to-end proof was a Karpenter node joining as `Ubuntu 24.04.4 LTS` and running the `inflate` workload.
+
+Important:
+
+- Tagging alone does not change the actual kubelet version inside the image.
+- A mismatched real kubelet/image version can still be unsafe even if KPO accepts the image after tag changes.
+
 ## Destroy
 
 Do not start with raw `terraform destroy`.
