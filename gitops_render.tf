@@ -16,7 +16,7 @@ locals {
     primaryVnicSubnetId    = module.subnets[var.karpenter.node_subnet].id
     secondaryVnicSubnetId  = module.subnets[var.karpenter.pod_subnet].id
     primaryVnicAssignPublicIp = var.karpenter.assign_public_ip
-    imageId                = try(var.oke_worker_node_image_ids[var.karpenter.node_image_name], "")
+    imageId                = try(var.oke_worker_node_image_ids[var.karpenter.node_image], "")
     preBootstrapInitScript = filebase64("${path.module}/gitops/c/kpo/pre-bootstrap-init.sh")
     shapeConfigOcpus       = 4
     shapeConfigMemoryInGbs = 16
