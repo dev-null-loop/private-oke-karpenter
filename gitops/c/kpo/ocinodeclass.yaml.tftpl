@@ -5,8 +5,8 @@ metadata:
 spec:
   preBootstrapInitScript: ${preBootstrapInitScript}
   shapeConfigs:
-    - ocpus: 8
-      memoryInGbs: 32
+    - ocpus: ${shapeConfigOcpus}
+      memoryInGbs: ${shapeConfigMemoryInGbs}
   volumeConfig:
     bootVolumeConfig:
       imageConfig:
