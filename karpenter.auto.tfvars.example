@@ -2,4 +2,5 @@ karpenter = {
   enabled             = true
   cluster             = "c"
   cluster_compartment = "dev"
+  node_image_name     = "Oracle-Linux-8.10-2026.02.28-0-OKE-1.33.10-1402"
 }

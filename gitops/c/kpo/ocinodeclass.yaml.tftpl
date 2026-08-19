@@ -5,13 +5,13 @@ metadata:
 spec:
   preBootstrapInitScript: ${preBootstrapInitScript}
   shapeConfigs:
-    - ocpus: ${shapeConfigOcpus}
-      memoryInGbs: ${shapeConfigMemoryInGbs}
+    - ocpus: 8
+      memoryInGbs: 32
   volumeConfig:
     bootVolumeConfig:
       imageConfig:
         imageType: OKEImage
-        imageId: ocid1.image.oc1.eu-frankfurt-1.aaaaaaaafyna2ydzlcm5da5qnsikfgkdagwsyrarhy2nvhvkumlgfmnb5e6q
+        imageId: ${imageId}
   networkConfig:
     primaryVnicConfig:
       subnetConfig:

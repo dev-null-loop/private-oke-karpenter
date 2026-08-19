@@ -1,34 +1,62 @@
 #!/usr/bin/env bash
-# Karpenter Provider OCI OKE bootstrap compatibility shim.
-#
-# Export OKE bootstrap metadata into the environment before Oracle's
-# standard OKE worker bootstrap entrypoint runs.
+# KPO still invokes /etc/oke/oke-install.sh with the Oracle Linux argument
+# contract. Ubuntu OKE images provide /usr/bin/oke bootstrap with different
+# flag names, so create a small compatibility wrapper.
 
 set -o errexit
 set -o nounset
 set -o pipefail
 
-MD_URL="http://169.254.169.254/opc/v2/instance/metadata"
-AUTH_HDR="Authorization: Bearer Oracle"
+install -d -m 0755 /etc/oke
+cat >/etc/oke/oke-install.sh <<'EOF'
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+set -o pipefail
 
-fetch_md() {
-  local key="$1"
-  curl -sfL -H "${AUTH_HDR}" --connect-timeout 2 --max-time 5 "${MD_URL}/${key}" 2>/dev/null || true
-}
+apiserver_host=""
+apiserver_port="6443"
+ca=""
+kubelet_extra_args=""
 
-CLUSTER_DNS="$(fetch_md kubedns_svc_ip)"
-KUBELET_EXTRA_ARGS="$(fetch_md kubelet-extra-args)"
-APISERVER_ENDPOINT="$(fetch_md apiserver_host)"
-KUBELET_CA_CERT="$(fetch_md cluster_ca_cert)"
+while (($#)); do
+  case "$1" in
+    --apiserver-endpoint)
+      endpoint="${2:-}"
+      if [[ -z "${endpoint}" ]]; then
+        echo "missing value for --apiserver-endpoint" >&2
+        exit 2
+      fi
+      if [[ "${endpoint}" =~ ^\[(.*)\]:(.*)$ ]]; then
+        apiserver_host="${BASH_REMATCH[1]}"
+        apiserver_port="${BASH_REMATCH[2]}"
+      elif [[ "${endpoint}" == *:* && "${endpoint}" != *","* ]]; then
+        apiserver_host="${endpoint%:*}"
+        apiserver_port="${endpoint##*:}"
+      else
+        apiserver_host="${endpoint}"
+      fi
+      shift 2
+      ;;
+    --kubelet-ca-cert)
+      ca="${2:-}"
+      shift 2
+      ;;
+    --kubelet-extra-args)
+      kubelet_extra_args="${2:-}"
+      shift 2
+      ;;
+    *)
+      echo "unsupported argument: $1" >&2
+      exit 2
+      ;;
+  esac
+done
 
-# OKE bootstrap expects the control-plane host without the Kubernetes API port.
-if [[ "${APISERVER_ENDPOINT}" =~ ^\[(.*)\](:[0-9]+)?$ ]]; then
-  APISERVER_ENDPOINT="${BASH_REMATCH[1]}"
-elif [[ "${APISERVER_ENDPOINT}" == *:* ]]; then
-  APISERVER_ENDPOINT="${APISERVER_ENDPOINT%%:*}"
-fi
-
-[ -n "${CLUSTER_DNS}" ] && export CLUSTER_DNS
-[ -n "${KUBELET_EXTRA_ARGS}" ] && export KUBELET_EXTRA_ARGS
-[ -n "${APISERVER_ENDPOINT}" ] && export APISERVER_ENDPOINT
-[ -n "${KUBELET_CA_CERT}" ] && export KUBELET_CA_CERT
+exec /usr/bin/oke bootstrap \
+  --apiserver-host "${apiserver_host}" \
+  --apiserver-port "${apiserver_port}" \
+  --ca "${ca}" \
+  --kubelet-extra-args "${kubelet_extra_args}"
+EOF
+chmod 0755 /etc/oke/oke-install.sh

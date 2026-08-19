@@ -36,3 +36,7 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+# Rendered environment-specific GitOps files
+gitops/c/kpo/values.yaml
+gitops/c/kpo/ocinodeclass.yaml
