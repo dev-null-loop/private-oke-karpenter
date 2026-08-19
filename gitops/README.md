@@ -20,6 +20,12 @@ The bastion installs Argo CD. After you patch environment-specific values, apply
 
 After that, Argo CD owns reconciliation of the KPO chart and manifests from Git.
 
+## Custom Controller Images
+
+If you need to run a custom-built KPO controller image instead of the published chart default, use:
+
+- `gitops/custom-kpo-image.md`
+
 ## Important Constraint
 
 These manifests are committed and environment-specific.

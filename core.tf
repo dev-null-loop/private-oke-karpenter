@@ -79,8 +79,4 @@ module "instances" {
   shape                      = each.value.shape
   shape_config               = each.value.shape_config
   source_details             = each.value.source_details
-  depends_on = [
-    module.dynamic_groups,
-    module.policies,
-  ]
 }

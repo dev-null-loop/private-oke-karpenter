@@ -1,4 +1,4 @@
-.PHONY: all init plan apply destroy clean gitops-push gitops-patch-kpo-ssh-key
+.PHONY: all init fmt plan apply destroy clean gitops-push gitops-patch-kpo-ssh-key
 
 all: init plan
 

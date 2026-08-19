@@ -11,16 +11,14 @@ spec:
     bootVolumeConfig:
       imageConfig:
         imageType: OKEImage
-        imageFilter:
-          osFilter: Oracle Linux
-          osVersionFilter: "8"
+        imageId: ocid1.image.oc1.eu-frankfurt-1.aaaaaaaafyna2ydzlcm5da5qnsikfgkdagwsyrarhy2nvhvkumlgfmnb5e6q
   networkConfig:
     primaryVnicConfig:
       subnetConfig:
-        subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaa346zxuspl23zo2zxhbstgpgs7xpi5oarrnzqz7ew2ck6f2xlnwxq
+        subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaa6ol3j3apvbbapaiptxdmqgcrrsefvbldmxfdnm6a44pbbxqhzwdq
       assignPublicIp: true
     secondaryVnicConfigs:
       - subnetConfig:
-          subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaarpi6ygv7h4bjwggk4nczhij2d35b3n2dx7caopuykvkrn4dt4osq
+          subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaaldc4iigadfwnr3ckaz5xe3ecgm46ocftpdwst2vupvy72grdpw3a
         ipCount: 8
         skipSourceDestCheck: true
