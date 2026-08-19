@@ -6,14 +6,19 @@ variable "karpenter" {
     cluster             = string
     cluster_compartment = string
     node_image          = optional(string)
-    ssh_public_key      = optional(string)
-    node_subnet         = optional(string, "nodes")
-    pod_subnet          = optional(string, "kpo_pods")
-    assign_public_ip    = optional(bool, true)
-    bastion_instance    = optional(string, "bastion")
+    image_filter = optional(object({
+      compartment = optional(string)
+      os          = string
+      os_version  = string
+    }))
+    ssh_public_key   = optional(string)
+    node_subnet      = optional(string, "nodes")
+    pod_subnet       = optional(string, "kpo_pods")
+    assign_public_ip = optional(bool, true)
+    bastion_instance = optional(string, "bastion")
     bastion_kubeconfig_iam = optional(object({
-      bastion_compartment   = optional(string)
-      policy                = optional(string, "kubeconfig_bastion_cluster")
+      bastion_compartment = optional(string)
+      policy              = optional(string, "kubeconfig_bastion_cluster")
     }), {})
     iam = optional(object({
       enabled                     = optional(bool, true)

@@ -13,13 +13,17 @@ locals {
   }
 
   ocinodeclass_yaml = {
-    primaryVnicSubnetId    = module.subnets[var.karpenter.node_subnet].id
-    secondaryVnicSubnetId  = module.subnets[var.karpenter.pod_subnet].id
+    primaryVnicSubnetId       = module.subnets[var.karpenter.node_subnet].id
+    secondaryVnicSubnetId     = module.subnets[var.karpenter.pod_subnet].id
     primaryVnicAssignPublicIp = var.karpenter.assign_public_ip
-    imageId                = try(var.oke_worker_node_image_ids[var.karpenter.node_image], "")
-    preBootstrapInitScript = filebase64("${path.module}/gitops/c/kpo/pre-bootstrap-init.sh")
-    shapeConfigOcpus       = 4
-    shapeConfigMemoryInGbs = 16
+    useImageFilter            = var.karpenter.image_filter != null
+    imageId                   = try(var.oke_worker_node_image_ids[var.karpenter.node_image], "")
+    imageFilterCompartmentId  = var.karpenter.image_filter != null ? var.compartment_ids[coalesce(try(var.karpenter.image_filter.compartment, null), var.karpenter.cluster_compartment)] : ""
+    imageFilterOs             = var.karpenter.image_filter != null ? var.karpenter.image_filter.os : ""
+    imageFilterOsVersion      = var.karpenter.image_filter != null ? var.karpenter.image_filter.os_version : ""
+    preBootstrapInitScript    = filebase64("${path.module}/gitops/c/kpo/pre-bootstrap-init.sh")
+    shapeConfigOcpus          = 4
+    shapeConfigMemoryInGbs    = 16
   }
 }
 
