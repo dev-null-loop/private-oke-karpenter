@@ -21,7 +21,7 @@ Brand-new cluster:
 3. Seed Argo once:
 
 ```bash
-kubectl apply -k /home/opc/private-oke-karpenter/gitops/c
+make gitops-bootstrap
 ```
 
 4. Wait for Argo sync.
