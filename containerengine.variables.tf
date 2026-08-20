@@ -93,3 +93,9 @@ variable "oke_worker_node_image_ids" {
   type        = map(string)
   default     = {}
 }
+
+variable "enable_kubeconfigs" {
+  description = "Whether to read kubeconfigs for the managed OKE clusters."
+  type        = bool
+  default     = true
+}

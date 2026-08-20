@@ -31,6 +31,6 @@ module "node_pools" {
 
 module "kubeconfigs" {
   source     = "git@github.com:dev-null-loop/oci_containerengine//kubeconfig"
-  for_each   = var.clusters
+  for_each   = var.enable_kubeconfigs ? var.clusters : {}
   cluster_id = module.clusters[each.key].id
 }

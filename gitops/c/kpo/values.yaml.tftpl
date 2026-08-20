@@ -1,6 +1,16 @@
 hostNetwork: true
 dnsPolicy: ClusterFirstWithHostNet
 replicaCount: 1
+%{ if useControllerImageOverride ~}
+image:
+  registry: "${controllerImageRegistry}"
+  repositoryName: "${controllerImageRepository}"
+  tag: "${controllerImageTag}"
+%{ if useControllerPullSecret ~}
+imagePullSecrets:
+  - name: "${controllerPullSecretName}"
+%{ endif ~}
+%{ endif ~}
 serviceAccount:
   create: true
   name: "${serviceAccountName}"

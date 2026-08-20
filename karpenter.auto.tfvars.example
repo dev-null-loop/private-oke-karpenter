@@ -2,5 +2,13 @@ karpenter = {
   enabled             = true
   cluster             = "c"
   cluster_compartment = "dev"
-  node_image          = "Oracle-Linux-8.10-2026.02.28-0-OKE-1.33.10-1402"
+  image_type          = "Custom"
+  bootstrap_mode      = "metadata"
+  node_image          = "ubuntu-24.04-2026.08.19.1-OKE-1.36.1"
+  # controller_image = {
+  #   registry         = "fra.ocir.io"
+  #   repository_name  = "<tenancy-namespace>/kpo/karpenter-provider-oci"
+  #   tag              = "ubuntu-custom-bootstrap-20260820"
+  #   pull_secret_name = "kpo-ocir-pull"
+  # }
 }

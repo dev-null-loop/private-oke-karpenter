@@ -44,7 +44,7 @@ locals {
     for k, v in var.instances : k => {
       cloud_init = v.cloud_init
       cloud_init_vars = merge(v.cloud_init_vars, {
-        kubeconfig_content = module.kubeconfigs[v.managed_cluster].kubeconfig_instance_principal
+        kubeconfig_content = try(module.kubeconfigs[v.managed_cluster].kubeconfig_instance_principal, "")
       })
     }
     if length(v.cloud_init) > 0

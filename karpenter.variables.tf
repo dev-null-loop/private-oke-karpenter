@@ -5,7 +5,15 @@ variable "karpenter" {
     namespace           = optional(string, "karpenter")
     cluster             = string
     cluster_compartment = string
+    image_type          = optional(string, "Custom")
+    bootstrap_mode      = optional(string, "metadata")
     node_image          = optional(string)
+    controller_image = optional(object({
+      registry         = string
+      repository_name  = string
+      tag              = string
+      pull_secret_name = optional(string)
+    }))
     image_filter = optional(object({
       compartment = optional(string)
       os          = string
@@ -37,5 +45,23 @@ variable "karpenter" {
     enabled             = false
     cluster             = "c"
     cluster_compartment = "dev"
+  }
+
+  validation {
+    condition     = contains(["OKEImage", "Custom"], try(var.karpenter.image_type, "OKEImage"))
+    error_message = "karpenter.image_type must be OKEImage or Custom."
+  }
+
+  validation {
+    condition     = contains(["prebootstrap", "metadata"], try(var.karpenter.bootstrap_mode, "prebootstrap"))
+    error_message = "karpenter.bootstrap_mode must be prebootstrap or metadata."
+  }
+
+  validation {
+    condition = !(
+      try(var.karpenter.image_type, "OKEImage") == "Custom" &&
+      try(var.karpenter.bootstrap_mode, "prebootstrap") != "metadata"
+    )
+    error_message = "karpenter.image_type = Custom requires karpenter.bootstrap_mode = metadata."
   }
 }

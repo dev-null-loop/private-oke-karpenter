@@ -9,7 +9,7 @@ plan:
 apply:
 	terraform apply -auto-approve
 destroy:
-	terraform destroy -auto-approve
+	terraform destroy -auto-approve -var='enable_kubeconfigs=false'
 clean:
 	rm -v -rf .terraform
 
