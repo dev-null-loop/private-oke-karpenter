@@ -3,14 +3,20 @@ kind: OCINodeClass
 metadata:
   name: karpenter-general
 spec:
+%{ if usePreBootstrapInitScript ~}
   preBootstrapInitScript: ${preBootstrapInitScript}
+%{ endif ~}
+%{ if useMetadataUserData ~}
+  metadata:
+    user_data: ${metadataUserData}
+%{ endif ~}
   shapeConfigs:
     - ocpus: ${shapeConfigOcpus}
       memoryInGbs: ${shapeConfigMemoryInGbs}
   volumeConfig:
     bootVolumeConfig:
       imageConfig:
-        imageType: OKEImage
+        imageType: ${imageType}
 %{ if useImageFilter ~}
         imageFilter:
           compartmentId: ${imageFilterCompartmentId}
