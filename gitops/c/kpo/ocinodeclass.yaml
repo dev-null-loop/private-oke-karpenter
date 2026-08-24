@@ -6,23 +6,20 @@ spec:
   metadata:
     user_data: I2Nsb3VkLWNvbmZpZwp3cml0ZV9maWxlczoKICAtIHBhdGg6IC91c3IvbG9jYWwvYmluL29rZS1jdXN0b20tYm9vdHN0cmFwLnNoCiAgICBwZXJtaXNzaW9uczogIjA3NTUiCiAgICBjb250ZW50OiB8CiAgICAgICMhL3Vzci9iaW4vZW52IGJhc2gKICAgICAgc2V0IC1vIGVycmV4aXQKICAgICAgc2V0IC1vIG5vdW5zZXQKICAgICAgc2V0IC1vIHBpcGVmYWlsCgogICAgICBtZF91cmw9Imh0dHA6Ly8xNjkuMjU0LjE2OS4yNTQvb3BjL3YyL2luc3RhbmNlL21ldGFkYXRhIgogICAgICBhdXRoX2hkcj0iQXV0aG9yaXphdGlvbjogQmVhcmVyIE9yYWNsZSIKCiAgICAgIGZldGNoX21kKCkgewogICAgICAgIGxvY2FsIGtleT0iJDEiCiAgICAgICAgY3VybCAtc2ZMIC1IICIke2F1dGhfaGRyfSIgLS1jb25uZWN0LXRpbWVvdXQgMiAtLW1heC10aW1lIDUgIiR7bWRfdXJsfS8ke2tleX0iIDI+L2Rldi9udWxsIHx8IHRydWUKICAgICAgfQoKICAgICAgYXBpc2VydmVyX2hvc3Q9IiQoZmV0Y2hfbWQgYXBpc2VydmVyX2hvc3QpIgogICAgICBrdWJlbGV0X2NhX2NlcnQ9IiQoZmV0Y2hfbWQgY2x1c3Rlcl9jYV9jZXJ0KSIKICAgICAga3ViZWxldF9leHRyYV9hcmdzPSIkKGZldGNoX21kIGt1YmVsZXQtZXh0cmEtYXJncykiCiAgICAgIGNsdXN0ZXJfZG5zPSIkKGZldGNoX21kIGt1YmVkbnNfc3ZjX2lwKSIKCiAgICAgIGFyZ3M9KAogICAgICAgIC0tYXBpc2VydmVyLWhvc3QgIiR7YXBpc2VydmVyX2hvc3R9IgogICAgICAgIC0tYXBpc2VydmVyLXBvcnQgIjY0NDMiCiAgICAgICAgLS1jYSAiJHtrdWJlbGV0X2NhX2NlcnR9IgogICAgICApCgogICAgICBpZiBbWyAtbiAiJHtrdWJlbGV0X2V4dHJhX2FyZ3N9IiBdXTsgdGhlbgogICAgICAgIGFyZ3MrPSgtLWt1YmVsZXQtZXh0cmEtYXJncyAiJHtrdWJlbGV0X2V4dHJhX2FyZ3N9IikKICAgICAgZmkKCiAgICAgIGlmIFtbIC1uICIke2NsdXN0ZXJfZG5zfSIgXV07IHRoZW4KICAgICAgICBhcmdzKz0oLS1jbHVzdGVyLWRucyAiJHtjbHVzdGVyX2Ruc30iKQogICAgICBmaQoKICAgICAgZXhlYyAvdXNyL2Jpbi9va2UgYm9vdHN0cmFwICIke2FyZ3NbQF19IgpydW5jbWQ6CiAgLSAvdXNyL2xvY2FsL2Jpbi9va2UtY3VzdG9tLWJvb3RzdHJhcC5zaAo=
   shapeConfigs:
-    - ocpus: 8
-      memoryInGbs: 32
+    - ocpus: 1
+      memoryInGbs: 8
   volumeConfig:
     bootVolumeConfig:
       imageConfig:
         imageType: OKEImage
-        imageFilter:
-          compartmentId: ocid1.compartment.oc1..aaaaaaaawpw5xpzxhzyhramvfhacgthnjljuojhijewbvm6dxaadsrixs7ya
-          osFilter: Canonical Ubuntu
-          osVersionFilter: "24.04"
+        imageId: ocid1.image.oc1.eu-frankfurt-1.aaaaaaaaxm47bgv2o5ahb2thglomdf6tgkr7jyrmazg5tg7c4cjmpkzgsv2a
   networkConfig:
     primaryVnicConfig:
       subnetConfig:
-        subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaa42rbibxdyrpknomzb6iyja2c5htdcpn5ufeuprn7zbhjmsuibkra
+        subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaa3gpridmbt6yerouczabpevavdsoxcdy6axgz2oy3e456brje4z3a
       assignPublicIp: true
     secondaryVnicConfigs:
       - subnetConfig:
-          subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaazekwwoluj2flhyyk75dahcmpzsgg6ixpktrb2dozgpczcs5e2dqa
+          subnetId: ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaavpnk3wd5ybwhd5dzrsslx36kf6ywbwuf5gxkznknunrbvq43xwkq
         ipCount: 8
         skipSourceDestCheck: true

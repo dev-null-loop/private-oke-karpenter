@@ -8,6 +8,8 @@ set -o nounset
 set -o pipefail
 
 install -d -m 0755 /etc/oke
+install -d -m 0755 /usr/local/bin
+
 cat >/etc/oke/oke-install.sh <<'EOF'
 #!/usr/bin/env bash
 set -o errexit

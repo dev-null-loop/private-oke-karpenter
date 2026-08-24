@@ -18,6 +18,7 @@ Brand-new cluster:
 2. Commit and push rendered GitOps files:
    - `gitops/c/kpo/values.yaml`
    - `gitops/c/kpo/ocinodeclass.yaml`
+   - `gitops/c/kpo/nodepool.yaml`
 3. Seed Argo once:
 
 ```bash
@@ -42,24 +43,37 @@ Optional:
 - If infra values change, re-render and push:
   - `gitops/c/kpo/values.yaml`
   - `gitops/c/kpo/ocinodeclass.yaml`
+  - `gitops/c/kpo/nodepool.yaml`
 - `settings.apiserverEndpoint` must be host-only, not `host:port`.
 
 ## Ubuntu KPO Note
 
-This repo now supports two Ubuntu bootstrap modes:
+This repo now supports three bootstrap modes:
 
+- `bootstrap_mode = "native"`
 - `bootstrap_mode = "prebootstrap"`
 - `bootstrap_mode = "metadata"`
 
 Current default:
 
-- `image_type = "Custom"`
+- `image_type = "OKEImage"`
+- `bootstrap_mode = "native"`
 - `bootstrap_mode = "metadata"`
+- `image_source = "filter"`
+- `shape.ocpus = 8`
+- `shape.memory_in_gbs = 32`
+- `pod_ip_count = 8`
+- `capacityType = "on-demand"`
+- `instanceShape = "VM.Standard.E3.Flex"`
 
 Recommended usage:
 
+- use `image_source = "filter"` when you want OKE to resolve an image through the image filter path
+- use `image_source = "image_id"` when you want to pin a specific image from `karpenter.node_image`
+- use `OKEImage + native` for official OKE images that already satisfy the default KPO/OKE bootstrap contract
 - use `Custom + metadata` with a patched KPO controller image when you want customer-owned bootstrap through `metadata.user_data`
 - use `OKEImage + prebootstrap` only when you want the smaller compatibility shim around the default KPO bootstrap flow
+- use `capacityType` and `instanceShape` when you want to switch NodePool scheduling scenarios quickly
 
 For Ubuntu custom images, the readable source is:
 
@@ -93,6 +107,26 @@ Do not start with raw `terraform destroy`.
 3. Wait for Argo sync.
 4. Verify Karpenter nodes are gone.
 5. Run `terraform destroy`.
+
+## Timing
+
+Single-node Karpenter timing benchmark:
+
+1. `make demand-delete`
+2. `date -u --iso-8601=seconds`
+3. `make demand-single-node`
+4. watch:
+   - `kubectl get nodeclaims -w`
+   - `kubectl get nodes -w`
+   - `kubectl get pods -n default -o wide -w`
+
+Detailed procedure and a measured August 20, 2026 reference run are in:
+
+- `gitops/karpenter-startup-timing-runbook.md`
+
+Lab model and scenario-control boundary:
+
+- `gitops/LAB_MODEL.md`
 
 ## Key Paths
 

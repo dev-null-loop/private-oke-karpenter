@@ -36,5 +36,51 @@ write_files:
       fi
 
       exec /usr/bin/oke bootstrap "$${args[@]}"
+  - path: /usr/local/bin/oke-bootstrap-reconcile.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -o errexit
+      set -o nounset
+      set -o pipefail
+
+      cert_path="/var/lib/kubelet/pki/kubelet-client-current.pem"
+      attempts=0
+      max_attempts=3
+
+      sleep 45
+
+      while (( attempts < max_attempts )); do
+        if [[ -e "$${cert_path}" ]]; then
+          exit 0
+        fi
+
+        if journalctl -u kubelet --since '2 minutes ago' --no-pager 2>/dev/null | grep -q 'Unauthorized'; then
+          attempts=$((attempts + 1))
+          /usr/local/bin/oke-custom-bootstrap.sh || true
+        fi
+
+        if [[ -e "$${cert_path}" ]]; then
+          exit 0
+        fi
+
+        sleep 20
+      done
+  - path: /etc/systemd/system/oke-bootstrap-reconcile.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=OKE bootstrap reconcile for kubelet auth drift
+      After=oke.service kubelet.service network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/oke-bootstrap-reconcile.sh
+
+      [Install]
+      WantedBy=multi-user.target
 runcmd:
+  - systemctl daemon-reload
+  - systemctl enable oke-bootstrap-reconcile.service
   - /usr/local/bin/oke-custom-bootstrap.sh

@@ -1,6 +1,7 @@
 locals {
-  karpenter_iam_enabled        = var.karpenter.enabled && var.karpenter.iam.enabled
-  karpenter_compute_dg_enabled = var.karpenter.enabled
+  bastion_kubeconfig_iam_enabled = try(var.karpenter.bastion_kubeconfig_iam.enabled, true)
+  karpenter_iam_enabled          = var.karpenter.enabled && var.karpenter.iam.enabled
+  karpenter_compute_dg_enabled   = var.karpenter.enabled || local.bastion_kubeconfig_iam_enabled
 
   karpenter_policy_compartment = coalesce(
     var.karpenter.iam.policy_compartment,
@@ -53,7 +54,7 @@ locals {
         )
       }
     } : {},
-    var.karpenter.enabled ? {
+    local.bastion_kubeconfig_iam_enabled ? {
       bastion_kubeconfig = {
         compartment_id = var.compartment_ids[var.karpenter.cluster_compartment]
         name           = var.karpenter.bastion_kubeconfig_iam.policy

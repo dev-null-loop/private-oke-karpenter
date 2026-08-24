@@ -18,16 +18,16 @@ spec:
         - key: karpenter.sh/capacity-type
           operator: In
           values:
-            - on-demand
+            - ${capacityType}
         - key: oci.oraclecloud.com/instance-shape
           operator: In
           values:
-            - VM.Standard.E5.Flex
+            - ${instanceShape}
   disruption:
     budgets:
       - nodes: 5%
     consolidateAfter: 60m
     consolidationPolicy: WhenEmpty
   limits:
-    cpu: 1760
-    memory: 3520Gi
+    cpu: ${limitCpu}
+    memory: ${limitMemory}

@@ -35,6 +35,11 @@ output "instances" {
 output "clusters" {
   value = { for k, v in module.clusters :
     k => {
+      private_endpoint          = v.private_endpoint
+      public_endpoint           = v.public_endpoint
+      kubernetes_endpoint       = v.kubernetes_endpoint
+      ipv6_endpoint             = v.ipv6_endpoint
+      vcn_hostname_endpoint     = v.vcn_hostname_endpoint
       endpoints                 = v.endpoints
       kubernetes_network_config = v.kubernetes_network_config
       service_lb_subnet_ids     = v.service_lb_subnet_ids

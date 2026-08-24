@@ -2,9 +2,21 @@ karpenter = {
   enabled             = true
   cluster             = "c"
   cluster_compartment = "dev"
-  image_type          = "Custom"
+  image_type          = "OKEImage"
   bootstrap_mode      = "metadata"
-  node_image          = "ubuntu-24.04-2026.08.19.1-OKE-1.36.1"
+  image_source        = "image_id"
+  node_image          = "ol8-2026.08.24-OKE-1.36.1-fast-start"
+  shape = {
+    ocpus         = 1
+    memory_in_gbs = 8
+  }
+  pod_ip_count = 8
+  capacityType        = "on-demand"
+  instanceShape       = "VM.Standard.E5.Flex"
+  limits = {
+    cpu    = 1760
+    memory = "3520Gi"
+  }
   # controller_image = {
   #   registry         = "fra.ocir.io"
   #   repository_name  = "<tenancy-namespace>/kpo/karpenter-provider-oci"

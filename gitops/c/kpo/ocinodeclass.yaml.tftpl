@@ -3,21 +3,21 @@ kind: OCINodeClass
 metadata:
   name: karpenter-general
 spec:
-%{ if usePreBootstrapInitScript ~}
+%{ if bootstrapMode == "prebootstrap" ~}
   preBootstrapInitScript: ${preBootstrapInitScript}
 %{ endif ~}
-%{ if useMetadataUserData ~}
+%{ if bootstrapMode == "metadata" ~}
   metadata:
     user_data: ${metadataUserData}
 %{ endif ~}
   shapeConfigs:
-    - ocpus: ${shapeConfigOcpus}
-      memoryInGbs: ${shapeConfigMemoryInGbs}
+    - ocpus: ${shapeOcpus}
+      memoryInGbs: ${shapeMemoryInGbs}
   volumeConfig:
     bootVolumeConfig:
       imageConfig:
         imageType: ${imageType}
-%{ if useImageFilter ~}
+%{ if imageSource == "filter" ~}
         imageFilter:
           compartmentId: ${imageFilterCompartmentId}
           osFilter: ${imageFilterOs}
@@ -33,5 +33,5 @@ spec:
     secondaryVnicConfigs:
       - subnetConfig:
           subnetId: ${secondaryVnicSubnetId}
-        ipCount: 8
+        ipCount: ${podIpCount}
         skipSourceDestCheck: true

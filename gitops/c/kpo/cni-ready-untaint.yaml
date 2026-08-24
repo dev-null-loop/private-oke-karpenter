@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cni-ready-untaint
+  namespace: karpenter
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cni-ready-untaint
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cni-ready-untaint
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cni-ready-untaint
+subjects:
+  - kind: ServiceAccount
+    name: cni-ready-untaint
+    namespace: karpenter
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cni-ready-untaint
+  namespace: karpenter
+spec:
+  selector:
+    matchLabels:
+      app: cni-ready-untaint
+  template:
+    metadata:
+      labels:
+        app: cni-ready-untaint
+    spec:
+      serviceAccountName: cni-ready-untaint
+      nodeSelector:
+        kubernetes.io/os: linux
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: karpenter.sh/nodepool
+                    operator: Exists
+      tolerations:
+        - operator: Exists
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: untaint
+          image: public.ecr.aws/z2c7x8q5/bitnami/kubectl@sha256:78726c39c86a468752790cd392839cef1282095400bb3cdf3619ab5dae9c8d2c
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          command:
+            - /bin/sh
+            - -ceu
+            - |
+              taint_key='oke.oraclecloud.com/cni-not-ready'
+              node="${NODE_NAME}"
+
+              while true; do
+                taints="$(kubectl get node "${node}" -o jsonpath='{range .spec.taints[*]}{.key}{"\n"}{end}' 2>/dev/null || true)"
+                if ! printf '%s\n' "${taints}" | grep -qx "${taint_key}"; then
+                  sleep 2
+                  continue
+                fi
+
+                cni_pod="$(kubectl get pods -n kube-system -l app=vcn-native-ip-cni \
+                  --field-selector "spec.nodeName=${node}" \
+                  -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
+                [ -n "${cni_pod}" ] || {
+                  sleep 2
+                  continue
+                }
+
+                phase="$(kubectl get pod -n kube-system "${cni_pod}" -o jsonpath='{.status.phase}' 2>/dev/null || true)"
+                readiness="$(kubectl get pod -n kube-system "${cni_pod}" -o jsonpath='{range .status.containerStatuses[*]}{.ready}{"\n"}{end}' 2>/dev/null || true)"
+                ready_count="$(printf '%s\n' "${readiness}" | grep -cx 'true' || true)"
+                container_count="$(printf '%s\n' "${readiness}" | sed '/^$/d' | wc -l | tr -d ' ')"
+
+                if [ "${phase}" = "Running" ] && [ "${container_count}" -gt 0 ] && [ "${ready_count}" = "${container_count}" ]; then
+                  kubectl taint node "${node}" "${taint_key}:NoSchedule-" || true
+                  sleep infinity &
+                  wait $!
+                fi
+                sleep 2
+              done
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName

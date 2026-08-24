@@ -1,12 +1,12 @@
 hostNetwork: true
 dnsPolicy: ClusterFirstWithHostNet
 replicaCount: 1
-%{ if useControllerImageOverride ~}
+%{ if controllerImageRegistry != "" ~}
 image:
   registry: "${controllerImageRegistry}"
   repositoryName: "${controllerImageRepository}"
   tag: "${controllerImageTag}"
-%{ if useControllerPullSecret ~}
+%{ if controllerPullSecretName != "" ~}
 imagePullSecrets:
   - name: "${controllerPullSecretName}"
 %{ endif ~}

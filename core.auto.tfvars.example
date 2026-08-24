@@ -53,7 +53,7 @@ subnets = {
   },
   kpo_pods = {
     display_name               = "kpo_pods"
-    cidr_block                 = "10.0.30.0/24"
+    cidr_block                 = "10.0.32.0/22"
     dns_label                  = "kpopods"
     prohibit_internet_ingress  = true
     prohibit_public_ip_on_vnic = true
@@ -412,7 +412,7 @@ security_lists = {
       },
       {
 	description      = "Allow KPO pods to communicate with each other"
-	destination      = "10.0.30.0/24"
+	destination      = "10.0.32.0/22"
 	destination_type = "CIDR_BLOCK"
 	protocol         = "all"
 	stateless        = false
@@ -468,7 +468,7 @@ security_lists = {
       },
       {
 	protocol    = "all"
-	source      = "10.0.30.0/24"
+	source      = "10.0.32.0/22"
 	source_type = "CIDR_BLOCK"
 	stateless   = false
       }

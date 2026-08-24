@@ -1,5 +1,7 @@
 oke_worker_node_image_ids = {
   "Oracle-Linux-8.10-2026.02.28-0-OKE-1.33.10-1402" = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaasa4pvuytqrw6yrbvu64546h5kveil6pi6a25jqt2w6pbu5mddcjq"
+  "ol8-2026.08.24-OKE-1.36.1-fast-start"            = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaainskxvizzzkoflewe6knlb57a5exxifn525yq5jnhacq7w5yk2xa"
+  "ubuntu-24-04-1787310882-OKE-1.36.1-fast-start"   = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaauv4zlgodt5lhs7466fo7w5t3eqhgbktur26inoq3ie7tdjt734zq"
 }
 
 clusters = {

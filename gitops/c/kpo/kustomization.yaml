@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - ocinodeclass.yaml
   - nodepool.yaml
+  - cni-ready-untaint.yaml
