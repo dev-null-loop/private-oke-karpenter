@@ -12,7 +12,10 @@ spec:
     bootVolumeConfig:
       imageConfig:
         imageType: OKEImage
-        imageId: ocid1.image.oc1.eu-frankfurt-1.aaaaaaaah2x6bcobbp6nt7irhq3hfeoiuizbk4jnnnwq3mnuwyhgr2hzlg2q
+        imageFilter:
+          compartmentId: ocid1.compartment.oc1..aaaaaaaawpw5xpzxhzyhramvfhacgthnjljuojhijewbvm6dxaadsrixs7ya
+          osFilter: Oracle Linux
+          osVersionFilter: "8"
   networkConfig:
     primaryVnicConfig:
       subnetConfig:
