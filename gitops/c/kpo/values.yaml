@@ -23,7 +23,7 @@ controller:
 settings:
   clusterCompartmentId: "ocid1.compartment.oc1..aaaaaaaawpw5xpzxhzyhramvfhacgthnjljuojhijewbvm6dxaadsrixs7ya"
   vcnCompartmentId: "ocid1.compartment.oc1..aaaaaaaawpw5xpzxhzyhramvfhacgthnjljuojhijewbvm6dxaadsrixs7ya"
-  apiserverEndpoint: "10.0.0.11"
+  apiserverEndpoint: "10.0.0.6"
   ociVcnIpNative: true
   ipFamilies:
     - IPv4
