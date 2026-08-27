@@ -1,9 +1,25 @@
 hostNetwork: true
 dnsPolicy: ClusterFirstWithHostNet
 replicaCount: 1
+image:
+  registry: "fra.ocir.io"
+  repositoryName: "idjuatm1d4mr/kpo/karpenter-provider-oci"
+  tag: "image-filter-cache-refresh-20260827"
+imagePullSecrets:
+  - name: "kpo-ocir-pull"
 serviceAccount:
   create: true
   name: "karpenter"
+controller:
+  env:
+    - name: "OCI_RESOURCE_PRINCIPAL_VERSION"
+      value: "2.2"
+    - name: "OCI_REGION"
+      value: ""
+    - name: "ENABLE_IMAGE_FILTER_CACHE_REFRESH"
+      value: "true"
+    - name: "IMAGE_FILTER_CACHE_REFRESH_INTERVAL_MINUTES"
+      value: "5"
 settings:
   clusterCompartmentId: "ocid1.compartment.oc1..aaaaaaaawpw5xpzxhzyhramvfhacgthnjljuojhijewbvm6dxaadsrixs7ya"
   vcnCompartmentId: "ocid1.compartment.oc1..aaaaaaaawpw5xpzxhzyhramvfhacgthnjljuojhijewbvm6dxaadsrixs7ya"

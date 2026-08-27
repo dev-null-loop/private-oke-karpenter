@@ -10,10 +10,12 @@ locals {
         module.clusters[var.karpenter.cluster].kubernetes_endpoint,
       )
     )[0]
-    controllerImageRegistry   = try(var.karpenter.controller_image.registry, "")
-    controllerImageRepository = try(var.karpenter.controller_image.repository_name, "")
-    controllerImageTag        = try(var.karpenter.controller_image.tag, "")
-    controllerPullSecretName  = try(var.karpenter.controller_image.pull_secret_name, "")
+    controllerImageRegistry                = try(var.karpenter.controller_image.registry, "")
+    controllerImageRepository              = try(var.karpenter.controller_image.repository_name, "")
+    controllerImageTag                     = try(var.karpenter.controller_image.tag, "")
+    controllerPullSecretName               = try(var.karpenter.controller_image.pull_secret_name, "")
+    enableImageFilterCacheRefresh          = try(var.karpenter.image_filter_cache_refresh.enabled, false)
+    imageFilterCacheRefreshIntervalMinutes = try(var.karpenter.image_filter_cache_refresh.interval_minutes, 30)
   }
 }
 

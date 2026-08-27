@@ -14,6 +14,18 @@ imagePullSecrets:
 serviceAccount:
   create: true
   name: "${serviceAccountName}"
+%{ if enableImageFilterCacheRefresh ~}
+controller:
+  env:
+    - name: "OCI_RESOURCE_PRINCIPAL_VERSION"
+      value: "2.2"
+    - name: "OCI_REGION"
+      value: ""
+    - name: "ENABLE_IMAGE_FILTER_CACHE_REFRESH"
+      value: "true"
+    - name: "IMAGE_FILTER_CACHE_REFRESH_INTERVAL_MINUTES"
+      value: "${imageFilterCacheRefreshIntervalMinutes}"
+%{ endif ~}
 settings:
   clusterCompartmentId: "${clusterCompartmentId}"
   vcnCompartmentId: "${vcnCompartmentId}"

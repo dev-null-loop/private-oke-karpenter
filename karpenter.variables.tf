@@ -15,6 +15,10 @@ variable "karpenter" {
       tag              = string
       pull_secret_name = optional(string)
     }))
+    image_filter_cache_refresh = optional(object({
+      enabled          = optional(bool, false)
+      interval_minutes = optional(number, 30)
+    }), {})
     image_filter = optional(object({
       compartment = optional(string)
       os          = string
